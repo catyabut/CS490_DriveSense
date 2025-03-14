@@ -35,8 +35,9 @@ dependencies {
     implementation libs.activity
     implementation libs.constraintlayout
     implementation libs.camera.core
-    implementation libs.camera.lifecycle
-    implementation libs.camera.view
+    implementation libs.camera.camera2
+    implementation libs.camera.lifecycle.v100
+    implementation libs.camera.view.v100
     testImplementation libs.junit
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core

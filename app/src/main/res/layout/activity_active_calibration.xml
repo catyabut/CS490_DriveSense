@@ -1,22 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#FFFFFF" >
+    android:layout_height="match_parent">
 
+    <!-- Camera Preview (Background) -->
     <androidx.camera.view.PreviewView
         android:id="@+id/previewView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1" />
+        android:layout_height="match_parent" />
 
-    <Button
-        android:id="@+id/captureButton"
-        android:layout_width="wrap_content"
+    <!-- Overlay for Facial Attributes (UI Overlay) -->
+    <LinearLayout
+        android:id="@+id/resultsLayout"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Capture"
-        android:layout_gravity="center"
-        android:layout_margin="16dp"/>
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:layout_gravity="top"
+        android:background="@android:color/transparent">
 
-</LinearLayout>
+        <TextView
+            android:id="@+id/eyeOpennessText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Eye Openness: "
+            android:textSize="16sp"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/livenessText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Liveness: "
+            android:textSize="16sp"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/glassesText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Glasses: "
+            android:textSize="16sp"
+            android:textColor="#FFFFFF" />
+
+        <TextView
+            android:id="@+id/maskText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Mask: "
+            android:textSize="16sp"
+            android:textColor="#FFFFFF" />
+    </LinearLayout>
+</FrameLayout>

@@ -2,7 +2,6 @@ package com.example.cs490_drivesense;
 
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
-import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.util.Log;
 
@@ -32,12 +31,9 @@ public class FacialAttributeDetectorTFLite {
         }
     }
 
-    public float[] detectFacialAttributes(Bitmap bitmap) {
-        // Resize bitmap to match model input size
-        Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, INPUT_SIZE, INPUT_SIZE, true);
-
-        // Preprocess image
-        ByteBuffer inputBuffer = preprocessImage(resizedBitmap);
+    public float[] detectFacialAttributes(float[] inputImage) {
+        // Prepare ByteBuffer for model input
+        ByteBuffer inputBuffer = preprocessImage(inputImage);
 
         // Model output
         float[][] outputData = new float[1][OUTPUT_SIZE];
@@ -48,22 +44,15 @@ public class FacialAttributeDetectorTFLite {
         return outputData[0];
     }
 
-    private ByteBuffer preprocessImage(Bitmap bitmap) {
+    private ByteBuffer preprocessImage(float[] inputImage) {
         ByteBuffer inputBuffer = ByteBuffer.allocateDirect(INPUT_SIZE * INPUT_SIZE * NUM_CHANNELS * 4);
         inputBuffer.order(ByteOrder.nativeOrder());
 
-        for (int y = 0; y < INPUT_SIZE; y++) {
-            for (int x = 0; x < INPUT_SIZE; x++) {
-                int pixel = bitmap.getPixel(x, y);
-                float r = Color.red(pixel) / 255.0f;
-                float g = Color.green(pixel) / 255.0f;
-                float b = Color.blue(pixel) / 255.0f;
-
-                inputBuffer.putFloat(r);
-                inputBuffer.putFloat(g);
-                inputBuffer.putFloat(b);
-            }
+        // Fill the input buffer with the float array
+        for (int i = 0; i < inputImage.length; i++) {
+            inputBuffer.putFloat(inputImage[i]); // Input image is already normalized
         }
+
         return inputBuffer;
     }
 
