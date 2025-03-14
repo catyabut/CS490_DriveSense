@@ -85,7 +85,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                 // Image analysis for real-time inference
                 ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .setTargetResolution(new android.util.Size(224, 224)) // Match model input size
+                        .setTargetResolution(new android.util.Size(INPUT_SIZE, INPUT_SIZE)) // Match model input size
                         .build();
 
                 // Set the analyzer for real-time frame processing
