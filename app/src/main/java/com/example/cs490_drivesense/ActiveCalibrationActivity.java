@@ -134,15 +134,17 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         Log.d("FacialAttributes", "Sunglasses: " + results.sunglasses);
         Log.d("FacialAttributes", "Mask: " + results.mask);
         // Display results
-        //TextView eyeOpennessText = findViewById(R.id.eyeOpennessText);
-        //TextView livenessText = findViewById(R.id.livenessText);
-        //TextView glassesText = findViewById(R.id.glassesText);
-        //TextView maskText = findViewById(R.id.maskText);
+        TextView eyeOpennessText = findViewById(R.id.eyeOpennessText);
+        TextView livenessText = findViewById(R.id.livenessText);
+        TextView glassesText = findViewById(R.id.glassesText);
+        TextView maskText = findViewById(R.id.maskText);
+        TextView sunglassesText = findViewById(R.id.sunglassesText);
 
-        //eyeOpennessText.setText("Eye Openness: Left: " + (eyeOpennessLeft ? "True" : "False") + ", Right: " + (eyeOpennessRight ? "True" : "False"));
-        //livenessText.setText("Liveness: " + (liveness ? "True" : "False"));
-        //glassesText.setText("Glasses: " + (glasses ? "True" : "False"));
-        //maskText.setText("Mask: " + (mask ? "True" : "False"));
+        eyeOpennessText.setText("Eye Openness: Left: " + (!results.eyeClosenessL ? "True" : "False") + ", Right: " + (!results.eyeClosenessR ? "True" : "False"));
+        livenessText.setText("Liveness: " + (results.liveness ? "True" : "False"));
+        glassesText.setText("Glasses: " + (results.glasses ? "True" : "False"));
+        maskText.setText("Mask: " + (results.mask ? "True" : "False"));
+        sunglassesText.setText("Sunglasses: " + (results.sunglasses ? "True" : "False"));
     }
 
 //    private float[] bitmapToFloatArray(Bitmap bitmap) {

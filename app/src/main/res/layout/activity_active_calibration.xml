@@ -13,42 +13,50 @@
     <LinearLayout
         android:id="@+id/resultsLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="16dp"
+        android:layout_height="140dp"
         android:layout_gravity="top"
-        android:background="@android:color/transparent">
+        android:background="@android:color/transparent"
+        android:orientation="vertical"
+        android:padding="16dp">
 
         <TextView
             android:id="@+id/eyeOpennessText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Eye Openness: "
-            android:textSize="16sp"
-            android:textColor="#FFFFFF" />
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
 
         <TextView
             android:id="@+id/livenessText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Liveness: "
-            android:textSize="16sp"
-            android:textColor="#FFFFFF" />
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
 
         <TextView
             android:id="@+id/glassesText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Glasses: "
-            android:textSize="16sp"
-            android:textColor="#FFFFFF" />
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
 
         <TextView
             android:id="@+id/maskText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Mask: "
-            android:textSize="16sp"
-            android:textColor="#FFFFFF" />
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/sunglassesText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Sunglasses: "
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
     </LinearLayout>
 </FrameLayout>
