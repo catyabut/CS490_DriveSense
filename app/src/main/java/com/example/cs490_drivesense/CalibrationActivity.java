@@ -22,6 +22,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class CalibrationActivity extends AppCompatActivity {
+    private FacialAttributeDetectorTFLite facialAttributeDetector; // Preload model
     private PreviewView previewView;
     private ExecutorService cameraExecutor;
 
@@ -32,10 +33,17 @@ public class CalibrationActivity extends AppCompatActivity {
 
         Button startButton = findViewById(R.id.button);
 
+        //Preload Facial Attribute Detection Model in a background thread
+        new Thread(() -> {
+            facialAttributeDetector = new FacialAttributeDetectorTFLite(getAssets());
+            Log.d("CalibrationActivity", "TFLite model preloaded successfully.");
+        }).start();
+
         startButton.setOnClickListener(view -> {
             // Move to another activity for camera activation
             Intent intent = new Intent(CalibrationActivity.this, ActiveCalibrationActivity.class);
             startActivity(intent);
+            finish();
         });
 
         // Initialize camera executor for background thread
