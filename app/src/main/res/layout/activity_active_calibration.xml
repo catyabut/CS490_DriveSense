@@ -4,16 +4,17 @@
     android:layout_height="match_parent">
 
     <!-- Camera Preview (Background) -->
+
+    <!-- Overlay for Facial Attributes (UI Overlay) -->
     <androidx.camera.view.PreviewView
         android:id="@+id/previewView"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Overlay for Facial Attributes (UI Overlay) -->
     <LinearLayout
         android:id="@+id/resultsLayout"
         android:layout_width="match_parent"
-        android:layout_height="140dp"
+        android:layout_height="437dp"
         android:layout_gravity="top"
         android:background="@android:color/transparent"
         android:orientation="vertical"
@@ -56,6 +57,78 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Sunglasses: "
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/faceDetectedText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Face Detected: "
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/boxCenterText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Box Center (X, Y): "
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/boxWHText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Box Width X Height: "
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/rightEyeText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Right Eye (X, Y): "
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/leftEyeText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Left Eye (X, Y): "
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/noseTipText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Nose Tip (X, Y): "
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/mouthCenterText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Mouth Center (X, Y): "
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/rightEarText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Right Ear (X, Y): "
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/leftEarText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Left Ear (X, Y): "
             android:textColor="#FFFFFF"
             android:textSize="16sp" />
     </LinearLayout>

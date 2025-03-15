@@ -19,7 +19,9 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import android.content.res.AssetManager;
@@ -37,11 +39,15 @@ public class MediaPipeFaceDetectionTFLite {
     private static final int INPUT_SIZE = 256; // Adjust to your model input size
     private static final int NUM_CHANNELS = 3; // RGB
     private static final int OUTPUT_SIZE = 2; // Adjust based on model output
+    private static final double BOX_SCORE_MIN_THRESHOLD = 0.75; // If sigmoid(boxScore) exceeds this value, face is detected 0.75 default
+
     private Map<Integer, Object> rawOutputs;
-    private FloatBuffer[] boxCoords = new FloatBuffer[896];
+    private FloatBuffer[] boxCoords = new FloatBuffer[896]; // 896 outputs
     private FloatBuffer boxScores;
-    public boolean isCalibrating = true;
+    public boolean isCalibrating = true; // The first time this model is called it will generate the neutral position
     private Interpreter tfliteInterpreter;
+
+    public MediaPipeFaceDetectionData neutralPosition = null; // Box coords and score of neutral position
 
     public MediaPipeFaceDetectionTFLite(AssetManager assetManager) {
         try {
@@ -69,18 +75,27 @@ public class MediaPipeFaceDetectionTFLite {
         this.organizeOutputs(rawOutputs); // store box coords so each box is a separate FloatBuffer instead of one list
         this.boxScores = (FloatBuffer) rawOutputs.get(1); // store boxScores
 
-        // Postprocess raw outputs HAVE TO FIGURE THIS OUT
-
+        // Store a list of all results as MediaPipeFaceDetectionData[] to send to detectDriverFromBoxes
+        MediaPipeFaceDetectionData[] allBoxes = new MediaPipeFaceDetectionData[896];
+        this.boxScores.flip();
+        int index = 0;
+        for (FloatBuffer boxCoords : this.boxCoords)
+        {
+            allBoxes[index] = new MediaPipeFaceDetectionData(boxCoords, boxScores.get());
+            index++;
+        }
+        // Send the list to detectDriverFromBoxes returns the data for the driver and their updated detectedStatus
+        MediaPipeFaceDetectionData driverData = detectDriverFromBoxes(allBoxes);
         // Anything that has to be done during calibration only
         if (isCalibrating)
         {
-
+            // Set the neutral position
+            this.neutralPosition = driverData;
             this.isCalibrating = false;
         }
 
-        // Return raw box coords and scores no post processing yet
-        MediaPipeFaceDetectionData processedData = new MediaPipeFaceDetectionData(this.boxCoords, this.boxScores);
-        return processedData;
+        // Return driver data
+        return driverData;
     }
 
     private ByteBuffer bitMapToByteBuffer(Bitmap bitmap) {
@@ -131,7 +146,7 @@ public class MediaPipeFaceDetectionTFLite {
         FloatBuffer rawBoxCoords = (FloatBuffer) outputs.get(0);
         rawBoxCoords.flip();
         int index = 0;
-        for (int i = 0; i < 56; i++)
+        for (int i = 0; i < 896; i++)
         {
             FloatBuffer b = FloatBuffer.allocate(16);
             for (int j = 0; j < 16; j++)
@@ -142,5 +157,50 @@ public class MediaPipeFaceDetectionTFLite {
             index++;
         }
     }
+
+    // Returns score in range [0, 1] using formula 1 / (1 + e^-x), used for box score
+    public static double sigmoid(double score)
+    {
+        return 1.0 / (1.0 + Math.exp((score*-1)));
+    }
+
+    // Function that uses a threshold and box score to detect all faces
+    // The largest face will be considered the driver
+    // Returns driver data (bounding box, keypoints, and faceDetected bool)
+    MediaPipeFaceDetectionData detectDriverFromBoxes(MediaPipeFaceDetectionData[] allBoxes)
+    {
+        MediaPipeFaceDetectionData driver = null;     // Return value is the driver
+        List<MediaPipeFaceDetectionData> allFaces = new ArrayList<MediaPipeFaceDetectionData>(); // All detected faces including passengers
+
+        for (MediaPipeFaceDetectionData box : allBoxes)
+        {
+            double newScore = sigmoid(box.boxScore);
+            // If a face is detected
+            if (sigmoid(box.boxScore) > BOX_SCORE_MIN_THRESHOLD)
+            {
+                box.faceDetected = true;
+                allFaces.add(box);
+            }
+        }
+
+        double maxArea = 0.0;
+        for (MediaPipeFaceDetectionData face : allFaces)
+        {
+            if ((face.boxWidth * face.boxHeight) > maxArea)
+            {
+                maxArea = (face.boxWidth * face.boxHeight);
+                driver = face;
+            }
+        }
+
+        // Face was not detected create empty data to avoid null error
+        if (driver == null)
+        {
+            driver = new MediaPipeFaceDetectionData();
+        }
+
+        return driver;
+    }
+
 
 }
