@@ -103,7 +103,7 @@ public class FacialAttributeDetectorTFLite {
 
     private MappedByteBuffer loadModelFile(AssetManager assetManager) throws IOException {
         try {
-            AssetFileDescriptor fileDescriptor = assetManager.openFd("face_attrib_net.tflite");
+            AssetFileDescriptor fileDescriptor = assetManager.openFd(MODEL_PATH);
             FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
             FileChannel fileChannel = inputStream.getChannel();
             return fileChannel.map(FileChannel.MapMode.READ_ONLY, fileDescriptor.getStartOffset(), fileDescriptor.getDeclaredLength());

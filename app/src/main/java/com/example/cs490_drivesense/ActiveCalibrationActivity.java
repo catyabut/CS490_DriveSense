@@ -4,7 +4,9 @@ import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
 import android.graphics.ImageFormat;
+import android.graphics.RectF;
 import android.graphics.YuvImage;
 import android.media.Image;
 import android.os.Bundle;
@@ -31,7 +33,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private static final long FRAME_INTERVAL_MS = 1000 / TARGET_FPS; //66ms interval for 15fps use
     private long lastProcessedTime = 0; //Timestamp of the last frame processed
 
-    private static final int INPUT_SIZE = 128;
+    private static final int INPUT_SIZE = 256;
 
     //Camera private variables
     private LinearLayout resultsLayout; //Declare resultsLayout
@@ -41,6 +43,9 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
     //FADM private variable
     private FacialAttributeDetectorTFLite facialAttributeDetector; // TFLite Model
+
+    //MPFD private variable
+    private MediaPipeFaceDetectionTFLite faceDetector; // TFLite Model
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,6 +58,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
         //Retrieve preloaded model from the Application class
         facialAttributeDetector = ((DriveSenseApplication) getApplication()).getFacialAttributeModel();
+        faceDetector = ((DriveSenseApplication) getApplication()).getMediaPipeFaceDetectionModel();
 
         if (facialAttributeDetector == null) {
             Log.e("ActiveCalibration", "TFLite model was NOT preloaded!");
@@ -94,19 +100,20 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                     long currentTime = System.currentTimeMillis();
                     // Only process frames if 66ms (1/15 fps) have passed since the last frame
                     if (currentTime - lastProcessedTime >= FRAME_INTERVAL_MS) {
-                        // Convert the camera frame to resized Bitmap
-                        Bitmap bitmap = imageToResizedBitmap(image);
+                        // Convert the camera frame to resized Bitmaps for each model
+                        Bitmap bitmapFA = imageToResizedBitmap(image, 128, 128);
+                        Bitmap bitmapMPFD = resizeAndPadMaintainAspectRatio(bitmapFA, 256, 256, 0);
 
-                        if (bitmap != null) {
-                            // Run inference on the float array using the model
-                            FacialAttributeData results = facialAttributeDetector.detectFacialAttributes(bitmap);
-                            //Log.d("TFLite", "Facial Attributes: " + arrayToString(results));
+                        if (bitmapFA != null && bitmapMPFD != null) {
+                            // Run inference on both models with given bitmap, return results
+                            FacialAttributeData faceAttributeResults = facialAttributeDetector.detectFacialAttributes(bitmapFA);
+                            MediaPipeFaceDetectionData faceDetectionResults = faceDetector.detectFace(bitmapMPFD);
 
                             // Update the last processed time
                             lastProcessedTime = currentTime;
 
                             // Update the UI with the results
-                            runOnUiThread(() -> updateAttributesUI(results));
+                            runOnUiThread(() -> updateAttributesUI(faceAttributeResults, faceDetectionResults));
                         }
                     }
                     image.close();
@@ -123,16 +130,16 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     }
 
     // Update the UI with the detected attributes
-    private void updateAttributesUI(FacialAttributeData results) {
+    private void updateAttributesUI(FacialAttributeData attributeResults, MediaPipeFaceDetectionData faceDetectionResults) {
         // Assuming results contains the attributes booleans: Eye Openness, Liveness, Glasses, Mask, etc.
 
         // Check if the results are being passed correctly
-        Log.d("FacialAttributes", "Eye Openness Left: " + !results.eyeClosenessL);
-        Log.d("FacialAttributes", "Eye Openness Right: " + !results.eyeClosenessR);
-        Log.d("FacialAttributes", "Liveness: " + results.liveness);
-        Log.d("FacialAttributes", "Glasses: " + results.glasses);
-        Log.d("FacialAttributes", "Sunglasses: " + results.sunglasses);
-        Log.d("FacialAttributes", "Mask: " + results.mask);
+        Log.d("FacialAttributes", "Eye Openness Left: " + !attributeResults.eyeClosenessL);
+        Log.d("FacialAttributes", "Eye Openness Right: " + !attributeResults.eyeClosenessR);
+        Log.d("FacialAttributes", "Liveness: " + attributeResults.liveness);
+        Log.d("FacialAttributes", "Glasses: " + attributeResults.glasses);
+        Log.d("FacialAttributes", "Sunglasses: " + attributeResults.sunglasses);
+        Log.d("FacialAttributes", "Mask: " + attributeResults.mask);
         // Display results
         TextView eyeOpennessText = findViewById(R.id.eyeOpennessText);
         TextView livenessText = findViewById(R.id.livenessText);
@@ -140,35 +147,16 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         TextView maskText = findViewById(R.id.maskText);
         TextView sunglassesText = findViewById(R.id.sunglassesText);
 
-        eyeOpennessText.setText("Eye Openness: Left: " + (!results.eyeClosenessL ? "True" : "False") + ", Right: " + (!results.eyeClosenessR ? "True" : "False"));
-        livenessText.setText("Liveness: " + (results.liveness ? "True" : "False"));
-        glassesText.setText("Glasses: " + (results.glasses ? "True" : "False"));
-        maskText.setText("Mask: " + (results.mask ? "True" : "False"));
-        sunglassesText.setText("Sunglasses: " + (results.sunglasses ? "True" : "False"));
+        eyeOpennessText.setText("Eye Openness: Left: " + (!attributeResults.eyeClosenessL ? "True" : "False") + ", Right: " + (!attributeResults.eyeClosenessR ? "True" : "False"));
+        livenessText.setText("Liveness: " + (attributeResults.liveness ? "True" : "False"));
+        glassesText.setText("Glasses: " + (attributeResults.glasses ? "True" : "False"));
+        maskText.setText("Mask: " + (attributeResults.mask ? "True" : "False"));
+        sunglassesText.setText("Sunglasses: " + (attributeResults.sunglasses ? "True" : "False"));
     }
 
-//    private float[] bitmapToFloatArray(Bitmap bitmap) {
-//        int width = bitmap.getWidth();
-//        int height = bitmap.getHeight();
-//        int[] intArray = new int[width * height];
-//        bitmap.getPixels(intArray, 0, width, 0, 0, width, height);
-//
-//        float[] floatArray = new float[width * height * 3];  // 3 channels for RGB
-//
-//        // Normalize each pixel and fill the float array
-//        for (int i = 0; i < intArray.length; i++) {
-//            int pixel = intArray[i];
-//            floatArray[i * 3] = ((pixel >> 16) & 0xFF) / 255.0f;  // Red channel
-//            floatArray[i * 3 + 1] = ((pixel >> 8) & 0xFF) / 255.0f;   // Green channel
-//            floatArray[i * 3 + 2] = (pixel & 0xFF) / 255.0f;  // Blue channel
-//        }
-//
-//        return floatArray;
-//    }
-
-    // Convert CameraX ImageProxy to Bitmap
+    // Convert CameraX ImageProxy to resized Bitmap of given width and height
     @OptIn(markerClass = ExperimentalGetImage.class)
-    private Bitmap imageToResizedBitmap(ImageProxy imageProxy) {
+    private Bitmap imageToResizedBitmap(ImageProxy imageProxy, int width, int height) {
         Image image = imageProxy.getImage();
         if (image == null) return null;
 
@@ -187,7 +175,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             Bitmap bitmap = BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.length);
 
             // Resize the Bitmap to match the input size expected by the model (e.g., 128x128)
-            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, INPUT_SIZE, INPUT_SIZE, true);
+            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
 
             return resizedBitmap;
 
@@ -197,6 +185,30 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         } finally {
             image.close(); // Ensure image is closed in case of error
         }
+    }
+
+    // Resize bitmap from another bitmap
+    public static Bitmap resizeAndPadMaintainAspectRatio(Bitmap image, int outputBitmapWidth, int outputBitmapHeight, int paddingValue) {
+        int width = image.getWidth();
+        int height = image.getHeight();
+        float ratioBitmap = (float) width / (float) height;
+        float ratioMax = (float) outputBitmapWidth / (float) outputBitmapHeight;
+
+        int finalWidth = outputBitmapWidth;
+        int finalHeight = outputBitmapHeight;
+        if (ratioMax > ratioBitmap) {
+            finalWidth = (int) ((float)outputBitmapHeight * ratioBitmap);
+        } else {
+            finalHeight = (int) ((float)outputBitmapWidth / ratioBitmap);
+        }
+
+        Bitmap outputImage = Bitmap.createBitmap(outputBitmapWidth, outputBitmapHeight, Bitmap.Config.ARGB_8888);
+        Canvas can = new Canvas(outputImage);
+        can.drawARGB(0xFF, paddingValue, paddingValue, paddingValue);
+        int left = (outputBitmapWidth - finalWidth) / 2;
+        int top = (outputBitmapHeight - finalHeight) / 2;
+        can.drawBitmap(image, null, new RectF(left, top, finalWidth + left, finalHeight + top), null);
+        return outputImage;
     }
 
     private String arrayToString(float[] array) {

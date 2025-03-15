@@ -6,6 +6,7 @@ import android.widget.Toast;
 
 public class DriveSenseApplication extends Application {
     private FacialAttributeDetectorTFLite facialAttributeDetector;
+    private MediaPipeFaceDetectionTFLite mediaPipeFaceDetector;
 
     @Override
     public void onCreate() {
@@ -16,7 +17,8 @@ public class DriveSenseApplication extends Application {
             try {
                 AssetManager assetManager = getAssets();
                 facialAttributeDetector = new FacialAttributeDetectorTFLite(assetManager);
-                runOnUiThread(() -> Toast.makeText(this, "AI Model Loaded!", Toast.LENGTH_SHORT).show());
+                mediaPipeFaceDetector = new MediaPipeFaceDetectionTFLite(assetManager);
+                runOnUiThread(() -> Toast.makeText(this, "AI Models Loaded!", Toast.LENGTH_SHORT).show());
             } catch (Exception e) {
                 runOnUiThread(() -> Toast.makeText(this, "Error loading AI model!", Toast.LENGTH_LONG).show());
             }
@@ -25,6 +27,10 @@ public class DriveSenseApplication extends Application {
 
     public FacialAttributeDetectorTFLite getFacialAttributeModel() {
         return facialAttributeDetector;
+    }
+
+    public MediaPipeFaceDetectionTFLite getMediaPipeFaceDetectionModel() {
+        return mediaPipeFaceDetector;
     }
 
     private void runOnUiThread(Runnable action) {
