@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.graphics.YuvImage;
 import android.media.Image;
@@ -29,7 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ActiveCalibrationActivity extends AppCompatActivity {
-    private static final int TARGET_FPS = 15;
+    private static final int TARGET_FPS = 10;
     private static final long FRAME_INTERVAL_MS = 1000 / TARGET_FPS; //66ms interval for 15fps use
     private long lastProcessedTime = 0; //Timestamp of the last frame processed
 
@@ -54,7 +55,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
         previewView = findViewById(R.id.previewView);
         // Results layout not found
-        //resultsLayout = findViewById(R.id.resultsLayout);
+        resultsLayout = findViewById(R.id.resultsLayout);
 
         //Retrieve preloaded model from the Application class
         facialAttributeDetector = ((DriveSenseApplication) getApplication()).getFacialAttributeModel();
@@ -98,16 +99,24 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                 // Set the analyzer for real-time frame processing
                 imageAnalysis.setAnalyzer(cameraExecutor, image -> {
                     long currentTime = System.currentTimeMillis();
+
                     // Only process frames if 66ms (1/15 fps) have passed since the last frame
                     if (currentTime - lastProcessedTime >= FRAME_INTERVAL_MS) {
+
                         // Convert the camera frame to resized Bitmaps for each model
                         Bitmap bitmapFA = imageToResizedBitmap(image, 128, 128);
                         Bitmap bitmapMPFD = resizeAndPadMaintainAspectRatio(bitmapFA, 256, 256, 0);
 
                         if (bitmapFA != null && bitmapMPFD != null) {
-                            // Run inference on both models with given bitmap, return results
+                            // Run inference on both models with the rotated, resized Bitmap
                             FacialAttributeData faceAttributeResults = facialAttributeDetector.detectFacialAttributes(bitmapFA);
                             MediaPipeFaceDetectionData faceDetectionResults = faceDetector.detectFace(bitmapMPFD);
+
+                            // Debug logs to check if MediaPipe is detecting faces
+                            Log.d("MediaPipe", "Face Detected: " + faceDetectionResults.faceDetected);
+                            Log.d("MediaPipe", "Bounding Box: Width=" + faceDetectionResults.boxWidth + ", Height=" + faceDetectionResults.boxHeight);
+
+
                             // Update the last processed time
                             lastProcessedTime = currentTime;
 
@@ -131,6 +140,10 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     // Update the UI with the detected attributes
     private void updateAttributesUI(FacialAttributeData attributeResults, MediaPipeFaceDetectionData faceDetectionResults) {
         // Assuming results contains the attributes booleans: Eye Openness, Liveness, Glasses, Mask, etc.
+        if (!faceDetectionResults.faceDetected) {
+            Log.w("MediaPipe", "No face detected, skipping UI update.");
+            return; // Skip updating UI if no face detected
+        }
 
         // Check if the results are being passed correctly
         Log.d("FacialAttributes", "Eye Openness Left: " + !attributeResults.eyeClosenessL);
@@ -186,6 +199,18 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         leftEarText.setText("Left Ear (X, Y): " + " (" + faceDetectionResults.leftEarTragionX + ", " + faceDetectionResults.leftEarTragionY);
     }
 
+    private Bitmap rotateBitmap(Bitmap bitmap, int rotationDegrees) {
+        if (rotationDegrees == 0) return bitmap; // No rotation needed
+
+        Matrix matrix = new Matrix();
+        matrix.postRotate(rotationDegrees);
+        //checking the applied rotations to image bitmap
+        Log.d("BitmapRotation", "Applying rotation: " + rotationDegrees);
+
+        return Bitmap.createBitmap(bitmap, 0, 0, bitmap.getWidth(), bitmap.getHeight(), matrix, true);
+    }
+
+
     // Convert CameraX ImageProxy to resized Bitmap of given width and height
     @OptIn(markerClass = ExperimentalGetImage.class)
     private Bitmap imageToResizedBitmap(ImageProxy imageProxy, int width, int height) {
@@ -206,8 +231,14 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             // Decode the byte array into a Bitmap
             Bitmap bitmap = BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.length);
 
+            // Get rotation from ImageProxy metadata
+            int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
+
+            // Rotate the Bitmap before resizing
+            Bitmap rotatedBitmap = rotateBitmap(bitmap, rotationDegrees);
+
             // Resize the Bitmap to match the input size expected by the model (e.g., 128x128)
-            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, width, height, true);
+            Bitmap resizedBitmap = Bitmap.createScaledBitmap(rotatedBitmap, width, height, true);
 
             return resizedBitmap;
 
@@ -243,13 +274,13 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         return outputImage;
     }
 
-    private String arrayToString(float[] array) {
-        StringBuilder sb = new StringBuilder();
-        for (float value : array) {
-            sb.append(value).append(" ");
-        }
-        return sb.toString();
-    }
+//    private String arrayToString(float[] array) {
+//        StringBuilder sb = new StringBuilder();
+//        for (float value : array) {
+//            sb.append(value).append(" ");
+//        }
+//        return sb.toString();
+//    }
 
     @Override
     protected void onDestroy() {

@@ -39,7 +39,8 @@ public class MediaPipeFaceDetectionTFLite {
     private static final int INPUT_SIZE = 256; // Adjust to your model input size
     private static final int NUM_CHANNELS = 3; // RGB
     private static final int OUTPUT_SIZE = 2; // Adjust based on model output
-    private static final double BOX_SCORE_MIN_THRESHOLD = 0.75; // If sigmoid(boxScore) exceeds this value, face is detected 0.75 default
+    private static final double BOX_SCORE_MIN_THRESHOLD = 0.25; // If sigmoid(boxScore) exceeds this value, face is detected 0.75 default
+    private MediaPipeFaceDetectionData lastValidResults = new MediaPipeFaceDetectionData(); //
 
     private Map<Integer, Object> rawOutputs;
     private FloatBuffer[] boxCoords = new FloatBuffer[896]; // 896 outputs
@@ -58,7 +59,7 @@ public class MediaPipeFaceDetectionTFLite {
     }
 
     public MediaPipeFaceDetectionData detectFace(Bitmap resizedBitmap) {
-
+        if (resizedBitmap == null) return lastValidResults; // Prevent empty results
 
         // Preprocess image into bytebuffer
         ByteBuffer inputBuffer = bitMapToByteBuffer(resizedBitmap);
