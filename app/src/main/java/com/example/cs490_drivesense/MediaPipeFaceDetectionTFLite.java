@@ -40,8 +40,8 @@ public class MediaPipeFaceDetectionTFLite {
     private static final int NUM_CHANNELS = 3; // RGB
     private static final int OUTPUT_SIZE = 2; // Adjust based on model output
     private static final double BOX_SCORE_MIN_THRESHOLD = 0.25; // If sigmoid(boxScore) exceeds this value, face is detected 0.75 default
-    private MediaPipeFaceDetectionData lastValidResults = new MediaPipeFaceDetectionData(); //
 
+    private MediaPipeFaceDetectionData lastValidResults = new MediaPipeFaceDetectionData(); //
     private Map<Integer, Object> rawOutputs;
     private FloatBuffer[] boxCoords = new FloatBuffer[896]; // 896 outputs
     private FloatBuffer boxScores;
@@ -49,6 +49,8 @@ public class MediaPipeFaceDetectionTFLite {
     private Interpreter tfliteInterpreter;
 
     public MediaPipeFaceDetectionData neutralPosition = null; // Box coords and score of neutral position
+    public MediaPipeFaceDetectionData[] last5Results = new MediaPipeFaceDetectionData[5];
+    private int currentIndex = 0; // Used to iterate over last5Results
 
     public MediaPipeFaceDetectionTFLite(AssetManager assetManager) {
         try {
@@ -87,13 +89,6 @@ public class MediaPipeFaceDetectionTFLite {
         }
         // Send the list to detectDriverFromBoxes returns the data for the driver and their updated detectedStatus
         MediaPipeFaceDetectionData driverData = detectDriverFromBoxes(allBoxes);
-        // Anything that has to be done during calibration only
-        if (isCalibrating)
-        {
-            // Set the neutral position
-            this.neutralPosition = driverData;
-            this.isCalibrating = false;
-        }
 
         // Return driver data
         return driverData;
@@ -200,8 +195,37 @@ public class MediaPipeFaceDetectionTFLite {
             driver = new MediaPipeFaceDetectionData();
         }
 
+        // Store in last 5 results
+        this.last5Results[this.currentIndex] = driver;
+        this.currentIndex++;
+        if (currentIndex == 5)
+        {
+            currentIndex = 0; // reset index, array is size 5
+        }
+
+
         return driver;
     }
 
+    // Function to calculate the distance between 2 points
+    public static double distBetweenPoints(double x1, double y1, double x2, double y2)
+    {
+        double xResult = x2 - x1;
+        double yResult = y2 - y1;
+        xResult = Math.pow(xResult, 2);
+        yResult = Math.pow(yResult, 2);
+        double sum = xResult + yResult;
+        return Math.sqrt(sum);
+    }
+
+    public void setNeutralPosition(MediaPipeFaceDetectionData position)
+    {
+        this.neutralPosition = position;
+    }
+
+    public MediaPipeFaceDetectionData getNeutralPosition()
+    {
+        return this.neutralPosition;
+    }
 
 }

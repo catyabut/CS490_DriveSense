@@ -1,5 +1,7 @@
 package com.example.cs490_drivesense;
 
+import static com.example.cs490_drivesense.MediaPipeFaceDetectionTFLite.distBetweenPoints;
+
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -33,8 +35,9 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private static final int TARGET_FPS = 10;
     private static final long FRAME_INTERVAL_MS = 1000 / TARGET_FPS; //66ms interval for 15fps use
     private long lastProcessedTime = 0; //Timestamp of the last frame processed
-
     private static final int INPUT_SIZE = 256;
+    private static final double MAX_DIST_ALLOWED = 0.20; // Used to make sure the points are close enough for calibration
+    private int counter = 0; // Used to ensure the first 5 results are collected before starting calibration
 
     //Camera private variables
     private LinearLayout resultsLayout; //Declare resultsLayout
@@ -110,6 +113,37 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                             // Run inference on both models with the rotated, resized Bitmap
                             FacialAttributeData faceAttributeResults = facialAttributeDetector.detectFacialAttributes(bitmapFA);
                             MediaPipeFaceDetectionData faceDetectionResults = faceDetector.detectFace(bitmapMPFD);
+
+                            // Make sure first 5 results are recorded first before calibrating
+                            if (this.counter < 5)
+                            {
+                                counter += 1;
+                            }
+                            // Calibrate the system to generate the neutral position
+                            else
+                            {
+                                boolean faceDetectedAllResults = this.faceDetected5Times(faceDetector.last5Results); // Check last 5 position for extreme movement
+                                // Check if user moved
+                                if (faceDetectedAllResults)
+                                {
+                                    boolean userStill = this.checkIfUserStill(faceDetector.last5Results);
+                                    // Calibration successful set the neutral position
+                                    if (userStill)
+                                    {
+                                        faceDetector.setNeutralPosition(faceDetectionResults);
+                                    }
+                                    // User moved too much do not set the neutral position
+                                    else
+                                    {
+                                        Log.d("Calibration", "ERROR: User needs to stay still.");
+                                    }
+                                }
+                                // Face was not detected enough times to check movement
+                                else
+                                {
+                                    Log.d("Calibration", "ERROR: Face was not detected 5 times, last 5 records needs to have detected a face.");
+                                }
+                            }
 
                             // Debug logs to check if MediaPipe is detecting faces
                             Log.d("MediaPipe", "Face Detected: " + faceDetectionResults.faceDetected);
@@ -221,7 +255,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
             // Convert YUV to RGB Bitmap
-            YuvImage yuvImage = new YuvImage(bytes, image.getFormat(), image.getWidth(), image.getHeight(), null);
+            YuvImage yuvImage = new YuvImage(bytes, ImageFormat.YUY2, image.getWidth(), image.getHeight(), null);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             yuvImage.compressToJpeg(new android.graphics.Rect(0, 0, image.getWidth(), image.getHeight()), 100, outputStream);
             byte[] jpegBytes = outputStream.toByteArray();
@@ -272,14 +306,6 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         return outputImage;
     }
 
-//    private String arrayToString(float[] array) {
-//        StringBuilder sb = new StringBuilder();
-//        for (float value : array) {
-//            sb.append(value).append(" ");
-//        }
-//        return sb.toString();
-//    }
-
     @Override
     protected void onDestroy() {
         super.onDestroy();
@@ -299,4 +325,72 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             }
         }
     }
+
+    // Check to make sure users face was detected last 5 times returns boolean
+    public boolean faceDetected5Times(MediaPipeFaceDetectionData[] history)
+    {
+        for (MediaPipeFaceDetectionData record : history)
+        {
+            if (!record.faceDetected)
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+    // Function that checks the last 5 results from mediapipe face detection model to ensure that the user doesn't move too much returns a bool
+    public boolean checkIfUserStill(MediaPipeFaceDetectionData[] history)
+    {
+        // For each record compare the distance between the points of the others records
+        for (int i = 0; i < history.length; i++)
+        {
+            MediaPipeFaceDetectionData currRecord = history[i];
+            for (int j = 0; j < history.length; j++)
+            {
+                // Don't compare a point with itself
+                if (j != i)
+                {
+                    // Check eyes
+                    double dist = distBetweenPoints(currRecord.rightEyeX, currRecord.rightEyeY, history[i].rightEyeX, history[i].rightEyeY);
+                    if (dist > MAX_DIST_ALLOWED)
+                    {
+                        return false;
+                    }
+                    dist = distBetweenPoints(currRecord.leftEyeX, currRecord.leftEyeY, history[i].leftEyeX, history[i].leftEyeY);
+                    if (dist > MAX_DIST_ALLOWED)
+                    {
+                        return false;
+                    }
+                    // Check nose
+                    dist = distBetweenPoints(currRecord.noseTipX, currRecord.noseTipY, history[i].noseTipX, history[i].noseTipY);
+                    if (dist > MAX_DIST_ALLOWED)
+                    {
+                        return false;
+                    }
+                    // Check mouth
+                    dist = distBetweenPoints(currRecord.mouthCenterX, currRecord.mouthCenterY, history[i].mouthCenterX, history[i].mouthCenterY);
+                    if (dist > MAX_DIST_ALLOWED)
+                    {
+                        return false;
+                    }
+                    // Check ears
+                    dist = distBetweenPoints(currRecord.rightEarTragionX, currRecord.rightEarTragionY, history[i].rightEarTragionX, history[i].rightEarTragionY);
+                    if (dist > MAX_DIST_ALLOWED)
+                    {
+                        return false;
+                    }
+                    dist = distBetweenPoints(currRecord.leftEarTragionX, currRecord.leftEarTragionY, history[i].leftEarTragionX, history[i].leftEarTragionY);
+                    if (dist > MAX_DIST_ALLOWED)
+                    {
+                        return false;
+                    }
+                }
+            }
+        }
+        // All points close enough to each other, driver has not made any major movements
+        return true;
+    }
+
+
+
 }
