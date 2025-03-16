@@ -27,6 +27,11 @@ public class FacialAttributeDetectorTFLite {
     private static final int INPUT_SIZE = 128; // Adjust to your model input size
     private static final int NUM_CHANNELS = 3; // RGB
     private static final int OUTPUT_SIZE = 6; // Adjust based on model output
+    private static final double EYE_CLOSENESS_MIN_THRESHOLD = 0.80;
+    private static final double GLASSES_MIN_THRESHOLD = 0.80;
+    private static final double SUNGLASSES_MIN_THRESHOLD = 0.80;
+    private static final double MASK_MIN_THRESHOLD = 0.80;
+    private static final double LIVENESS_MAX_THRESHOLD = 10;
 
     private Map<Integer, Object> rawOutputs;
     private FloatBuffer originalLivenessEmbedding;
@@ -288,7 +293,7 @@ public class FacialAttributeDetectorTFLite {
     // Compute eyecloseness booleans
     private void computeEyeClosenessBoolean()
     {
-        if (this.probEyeClosenessL > 0.90)
+        if (this.probEyeClosenessL > EYE_CLOSENESS_MIN_THRESHOLD)
         {
             this.eyeClosenessL = true;
         }
@@ -296,7 +301,7 @@ public class FacialAttributeDetectorTFLite {
         {
             this.eyeClosenessL = false;
         }
-        if (this.probEyeClosenessR > 0.90)
+        if (this.probEyeClosenessR > EYE_CLOSENESS_MIN_THRESHOLD)
         {
             this.eyeClosenessR = true;
         }
@@ -309,7 +314,7 @@ public class FacialAttributeDetectorTFLite {
     // Compute glasses boolean
     private void computeGlassesBoolean()
     {
-        if (this.probGlasses > 0.90)
+        if (this.probGlasses > GLASSES_MIN_THRESHOLD)
         {
             this.glasses = true;
         }
@@ -321,7 +326,7 @@ public class FacialAttributeDetectorTFLite {
     // Compute mask boolean
     private void computeMaskBoolean()
     {
-        if (this.probMask > 0.90)
+        if (this.probMask > MASK_MIN_THRESHOLD)
         {
             this.mask = true;
         }
@@ -334,7 +339,7 @@ public class FacialAttributeDetectorTFLite {
     // Compute sunglasses booleans
     private void computeSunglassesBoolean()
     {
-        if (this.probSunglasses > 0.90)
+        if (this.probSunglasses > SUNGLASSES_MIN_THRESHOLD)
         {
             this.sunglasses = true;
         }
@@ -348,7 +353,7 @@ public class FacialAttributeDetectorTFLite {
     private void computeLivenessBoolean()
     {
         // If loss is close to 0 meaning liveness embeddings are similar
-        if (this.livenessLoss < 10.0)
+        if (this.livenessLoss < LIVENESS_MAX_THRESHOLD)
         {
             this.liveness = true;
         }

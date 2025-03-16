@@ -99,7 +99,6 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                 // Set the analyzer for real-time frame processing
                 imageAnalysis.setAnalyzer(cameraExecutor, image -> {
                     long currentTime = System.currentTimeMillis();
-
                     // Only process frames if 66ms (1/15 fps) have passed since the last frame
                     if (currentTime - lastProcessedTime >= FRAME_INTERVAL_MS) {
 
@@ -221,9 +220,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             ByteBuffer buffer = image.getPlanes()[0].getBuffer();
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
-
             // Convert YUV to RGB Bitmap
-            YuvImage yuvImage = new YuvImage(bytes, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
+            YuvImage yuvImage = new YuvImage(bytes, image.getFormat(), image.getWidth(), image.getHeight(), null);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             yuvImage.compressToJpeg(new android.graphics.Rect(0, 0, image.getWidth(), image.getHeight()), 100, outputStream);
             byte[] jpegBytes = outputStream.toByteArray();
