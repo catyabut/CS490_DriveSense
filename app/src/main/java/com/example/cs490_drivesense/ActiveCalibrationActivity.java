@@ -94,6 +94,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
                 // Image analysis for real-time inference
                 ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
+                        //.setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setTargetResolution(new android.util.Size(INPUT_SIZE, INPUT_SIZE)) // Match model input size 128 X 128
                         .build();
@@ -105,8 +106,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                     if (currentTime - lastProcessedTime >= FRAME_INTERVAL_MS) {
 
                         // Convert the camera frame to resized Bitmaps for each model
-                        Bitmap bitmapFA = imageToResizedBitmap(image, 128, 128);
-                        Bitmap bitmapMPFD = resizeAndPadMaintainAspectRatio(bitmapFA, 256, 256, 0);
+                        Bitmap bitmapMPFD = imageToResizedBitmap(image, 256, 256);
+                        Bitmap bitmapFA = resizeAndPadMaintainAspectRatio(bitmapMPFD, 128, 128, 0);
 
                         if (bitmapFA != null && bitmapMPFD != null) {
                             // Run inference on both models with the rotated, resized Bitmap
@@ -254,7 +255,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
             // Convert YUV to RGB Bitmap
-            YuvImage yuvImage = new YuvImage(bytes, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
+            YuvImage yuvImage = new YuvImage(bytes, 35, image.getWidth(), image.getHeight(), null);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             yuvImage.compressToJpeg(new android.graphics.Rect(0, 0, image.getWidth(), image.getHeight()), 100, outputStream);
             byte[] jpegBytes = outputStream.toByteArray();
