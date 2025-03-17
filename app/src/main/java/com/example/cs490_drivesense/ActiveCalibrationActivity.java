@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.RectF;
@@ -37,9 +38,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private long lastProcessedTime = 0; //Timestamp of the last frame processed
     private static final int INPUT_SIZE = 256;
     private static final double MAX_DIST_ALLOWED = 0.20; // Used to make sure the points are close enough for calibration
-    private int counter = 0; // Used to ensure the first 5 results are collected before starting calibration
 
-    //Camera private variables
+    private int counter = 0; // Used to ensure the first 5 results are collected before starting calibration
+    private static final int CALIBRATION_FRAME_COUNT = 10; //To change the max frames needed for checking neutral position
+
+    //***************Camera private variables********************
     private LinearLayout resultsLayout; //Declare resultsLayout
     private PreviewView previewView;
     private ExecutorService cameraExecutor;
@@ -76,6 +79,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         }
 
         cameraExecutor = Executors.newSingleThreadExecutor();
+
     }
 
 
@@ -114,19 +118,19 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                             FacialAttributeData faceAttributeResults = facialAttributeDetector.detectFacialAttributes(bitmapFA);
                             MediaPipeFaceDetectionData faceDetectionResults = faceDetector.detectFace(bitmapMPFD);
 
-                            // Make sure first 5 results are recorded first before calibrating
-                            if (this.counter < 5)
+                            // Make sure first 10 results are recorded first before calibrating
+                            if (this.counter < CALIBRATION_FRAME_COUNT)
                             {
                                 counter += 1;
                             }
                             // Calibrate the system to generate the neutral position
                             else
                             {
-                                boolean faceDetectedAllResults = this.faceDetected5Times(faceDetector.last5Results); // Check last 5 position for extreme movement
+                                boolean faceDetectedAllResults = this.faceDetectedXTimes(faceDetector.lastXResults); // Check last 5 position for extreme movement
                                 // Check if user moved
                                 if (faceDetectedAllResults)
                                 {
-                                    boolean userStill = this.checkIfUserStill(faceDetector.last5Results);
+                                    boolean userStill = this.checkIfUserStill(faceDetector.lastXResults);
                                     // Calibration successful set the neutral position
                                     if (userStill)
                                     {
@@ -173,10 +177,10 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     // Update the UI with the detected attributes
     private void updateAttributesUI(FacialAttributeData attributeResults, MediaPipeFaceDetectionData faceDetectionResults) {
         // Assuming results contains the attributes booleans: Eye Openness, Liveness, Glasses, Mask, etc.
-        if (!faceDetectionResults.faceDetected) {
-            Log.w("MediaPipe", "No face detected, skipping UI update.");
-            return; // Skip updating UI if no face detected
-        }
+//        if (!faceDetectionResults.faceDetected) {
+//            Log.w("MediaPipe", "No face detected, skipping UI update.");
+//            return; // Skip updating UI if no face detected
+//        }
 
         // Check if the results are being passed correctly
         Log.d("FacialAttributes", "Eye Openness Left: " + !attributeResults.eyeClosenessL);
@@ -230,6 +234,22 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         mouthCenterText.setText("Mouth Center (X, Y): " + " (" + faceDetectionResults.mouthCenterX + ", " + faceDetectionResults.mouthCenterY);
         rightEarText.setText("Right Ear (X, Y): " + " (" + faceDetectionResults.rightEarTragionX + ", " + faceDetectionResults.rightEarTragionY);
         leftEarText.setText("Left Ear (X, Y): " + " (" + faceDetectionResults.leftEarTragionX + ", " + faceDetectionResults.leftEarTragionY);
+
+        TextView calibrationStatusText = findViewById(R.id.calibrationStatusText);
+
+        if (counter < CALIBRATION_FRAME_COUNT) {
+            calibrationStatusText.setText("Calibrating... Hold still.");
+        } else if (!faceDetectedXTimes(faceDetector.lastXResults)) {
+            calibrationStatusText.setText("Error: Face not detected consistently.");
+            calibrationStatusText.setTextColor(Color.RED);
+        } else if (!checkIfUserStill(faceDetector.lastXResults)) {
+            calibrationStatusText.setText("Error: Please stay still.");
+            calibrationStatusText.setTextColor(Color.RED);
+        } else {
+            calibrationStatusText.setText("Calibration Successful!");
+            calibrationStatusText.setTextColor(Color.GREEN);
+        }
+
     }
 
     private Bitmap rotateBitmap(Bitmap bitmap, int rotationDegrees) {
@@ -251,6 +271,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         if (image == null) return null;
 
         try {
+
             ByteBuffer buffer = image.getPlanes()[0].getBuffer();
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
@@ -327,12 +348,20 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     }
 
     // Check to make sure users face was detected last 5 times returns boolean
-    public boolean faceDetected5Times(MediaPipeFaceDetectionData[] history)
+    public boolean faceDetectedXTimes(MediaPipeFaceDetectionData[] history)
     {
-        for (MediaPipeFaceDetectionData record : history)
-        {
-            if (!record.faceDetected)
-            {
+        if (history == null) {
+            Log.e("Calibration", "faceDetectedXTimes: history array is null!");
+            return false;
+        }
+
+        for (int i = 0; i < history.length; i++) {
+            if (history[i] == null) {
+                Log.w("Calibration", "faceDetectedXTimes: history[" + i + "] is null!");
+                return false; // Avoid NullPointerException
+            }
+
+            if (!history[i].faceDetected) {
                 return false;
             }
         }
@@ -350,37 +379,41 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                 // Don't compare a point with itself
                 if (j != i)
                 {
+                    //Calculate a dynamic threshold based on the face size
+                    double dynamicThreshold = currRecord.boxWidth * 0.10; //10% of face width
+                    Log.d("Calibration", "Dynamic Threshold: " + dynamicThreshold);
+
                     // Check eyes
                     double dist = distBetweenPoints(currRecord.rightEyeX, currRecord.rightEyeY, history[i].rightEyeX, history[i].rightEyeY);
-                    if (dist > MAX_DIST_ALLOWED)
+                    if (dist > dynamicThreshold)
                     {
                         return false;
                     }
                     dist = distBetweenPoints(currRecord.leftEyeX, currRecord.leftEyeY, history[i].leftEyeX, history[i].leftEyeY);
-                    if (dist > MAX_DIST_ALLOWED)
+                    if (dist > dynamicThreshold)
                     {
                         return false;
                     }
                     // Check nose
                     dist = distBetweenPoints(currRecord.noseTipX, currRecord.noseTipY, history[i].noseTipX, history[i].noseTipY);
-                    if (dist > MAX_DIST_ALLOWED)
+                    if (dist > dynamicThreshold)
                     {
                         return false;
                     }
                     // Check mouth
                     dist = distBetweenPoints(currRecord.mouthCenterX, currRecord.mouthCenterY, history[i].mouthCenterX, history[i].mouthCenterY);
-                    if (dist > MAX_DIST_ALLOWED)
+                    if (dist > dynamicThreshold)
                     {
                         return false;
                     }
                     // Check ears
                     dist = distBetweenPoints(currRecord.rightEarTragionX, currRecord.rightEarTragionY, history[i].rightEarTragionX, history[i].rightEarTragionY);
-                    if (dist > MAX_DIST_ALLOWED)
+                    if (dist > dynamicThreshold)
                     {
                         return false;
                     }
                     dist = distBetweenPoints(currRecord.leftEarTragionX, currRecord.leftEarTragionY, history[i].leftEarTragionX, history[i].leftEarTragionY);
-                    if (dist > MAX_DIST_ALLOWED)
+                    if (dist > dynamicThreshold)
                     {
                         return false;
                     }
@@ -390,7 +423,6 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         // All points close enough to each other, driver has not made any major movements
         return true;
     }
-
 
 
 }

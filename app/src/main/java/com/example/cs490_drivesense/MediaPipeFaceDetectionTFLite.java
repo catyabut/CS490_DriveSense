@@ -41,6 +41,7 @@ public class MediaPipeFaceDetectionTFLite {
     private static final int OUTPUT_SIZE = 2; // Adjust based on model output
     private static final double BOX_SCORE_MIN_THRESHOLD = 0.25; // If sigmoid(boxScore) exceeds this value, face is detected 0.75 default
 
+    private static final int MAX_DETECTION_DATA = 10;
     private MediaPipeFaceDetectionData lastValidResults = new MediaPipeFaceDetectionData(); //
     private Map<Integer, Object> rawOutputs;
     private FloatBuffer[] boxCoords = new FloatBuffer[896]; // 896 outputs
@@ -49,7 +50,7 @@ public class MediaPipeFaceDetectionTFLite {
     private Interpreter tfliteInterpreter;
 
     public MediaPipeFaceDetectionData neutralPosition = null; // Box coords and score of neutral position
-    public MediaPipeFaceDetectionData[] last5Results = new MediaPipeFaceDetectionData[5];
+    public MediaPipeFaceDetectionData[] lastXResults = new MediaPipeFaceDetectionData[MAX_DETECTION_DATA];
     private int currentIndex = 0; // Used to iterate over last5Results
 
     public MediaPipeFaceDetectionTFLite(AssetManager assetManager) {
@@ -87,8 +88,21 @@ public class MediaPipeFaceDetectionTFLite {
             allBoxes[index] = new MediaPipeFaceDetectionData(boxCoords, boxScores.get());
             index++;
         }
+
         // Send the list to detectDriverFromBoxes returns the data for the driver and their updated detectedStatus
         MediaPipeFaceDetectionData driverData = detectDriverFromBoxes(allBoxes);
+
+        if (lastXResults == null) {
+            lastXResults = new MediaPipeFaceDetectionData[5]; // Initialize if null
+        }
+
+        // Shift the results (move older detections down)
+        for (int i = lastXResults.length - 1; i > 0; i--) {
+            lastXResults[i] = lastXResults[i - 1];
+        }
+
+        // Store the latest detection
+        lastXResults[0] = driverData;
 
         // Return driver data
         return driverData;
@@ -162,7 +176,7 @@ public class MediaPipeFaceDetectionTFLite {
 
     // Function that uses a threshold and box score to detect all faces
     // The largest face will be considered the driver
-    // Returns driver data (bounding box, keypoints, and faceDetected bool)
+    // Returns driver data (bounding box, keypoints, and faceDetect bool)
     MediaPipeFaceDetectionData detectDriverFromBoxes(MediaPipeFaceDetectionData[] allBoxes)
     {
         MediaPipeFaceDetectionData driver = null;     // Return value is the driver
@@ -196,9 +210,9 @@ public class MediaPipeFaceDetectionTFLite {
         }
 
         // Store in last 5 results
-        this.last5Results[this.currentIndex] = driver;
+        this.lastXResults[this.currentIndex] = driver;
         this.currentIndex++;
-        if (currentIndex == 5)
+        if (currentIndex == MAX_DETECTION_DATA)
         {
             currentIndex = 0; // reset index, array is size 5
         }
