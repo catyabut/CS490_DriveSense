@@ -31,116 +31,116 @@
             android:gravity="center"
             android:padding="10dp"/>
 
-        <TextView
-            android:id="@+id/eyeOpennessText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Eye Openness: "
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/eyeOpennessText"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Eye Openness: "-->
+<!--            android:textColor="#FFFFFF"-->
+<!--            android:textSize="16sp" />-->
 
-        <TextView
-            android:id="@+id/livenessText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Liveness: "
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/livenessText"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Liveness: "-->
+<!--            android:textColor="#FFFFFF"-->
+<!--            android:textSize="16sp" />-->
 
-        <TextView
-            android:id="@+id/glassesText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Glasses: "
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/glassesText"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Glasses: "-->
+<!--            android:textColor="#FFFFFF"-->
+<!--            android:textSize="16sp" />-->
 
-        <TextView
-            android:id="@+id/maskText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Mask: "
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/maskText"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Mask: "-->
+<!--            android:textColor="#FFFFFF"-->
+<!--            android:textSize="16sp" />-->
 
-        <TextView
-            android:id="@+id/sunglassesText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Sunglasses: "
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/sunglassesText"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Sunglasses: "-->
+<!--            android:textColor="#FFFFFF"-->
+<!--            android:textSize="16sp" />-->
 
-        <TextView
-            android:id="@+id/faceDetectedText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Face Detected: "
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/faceDetectedText"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Face Detected: "-->
+<!--            android:textColor="#FFFFFF"-->
+<!--            android:textSize="16sp" />-->
 
-        <TextView
-            android:id="@+id/boxCenterText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Box Center (X, Y): "
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/boxCenterText"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Box Center (X, Y): "-->
+<!--            android:textColor="#FFFFFF"-->
+<!--            android:textSize="16sp" />-->
 
-        <TextView
-            android:id="@+id/boxWHText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Box Width X Height: "
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/boxWHText"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Box Width X Height: "-->
+<!--            android:textColor="#FFFFFF"-->
+<!--            android:textSize="16sp" />-->
 
-        <TextView
-            android:id="@+id/rightEyeText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Right Eye (X, Y): "
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/rightEyeText"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Right Eye (X, Y): "-->
+<!--            android:textColor="#FFFFFF"-->
+<!--            android:textSize="16sp" />-->
 
-        <TextView
-            android:id="@+id/leftEyeText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Left Eye (X, Y): "
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/leftEyeText"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Left Eye (X, Y): "-->
+<!--            android:textColor="#FFFFFF"-->
+<!--            android:textSize="16sp" />-->
 
-        <TextView
-            android:id="@+id/noseTipText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Nose Tip (X, Y): "
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/noseTipText"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Nose Tip (X, Y): "-->
+<!--            android:textColor="#FFFFFF"-->
+<!--            android:textSize="16sp" />-->
 
-        <TextView
-            android:id="@+id/mouthCenterText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Mouth Center (X, Y): "
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/mouthCenterText"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Mouth Center (X, Y): "-->
+<!--            android:textColor="#FFFFFF"-->
+<!--            android:textSize="16sp" />-->
 
-        <TextView
-            android:id="@+id/rightEarText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Right Ear (X, Y): "
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/rightEarText"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Right Ear (X, Y): "-->
+<!--            android:textColor="#FFFFFF"-->
+<!--            android:textSize="16sp" />-->
 
-        <TextView
-            android:id="@+id/leftEarText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Left Ear (X, Y): "
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/leftEarText"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Left Ear (X, Y): "-->
+<!--            android:textColor="#FFFFFF"-->
+<!--            android:textSize="16sp" />-->
     </LinearLayout>
 </FrameLayout>
