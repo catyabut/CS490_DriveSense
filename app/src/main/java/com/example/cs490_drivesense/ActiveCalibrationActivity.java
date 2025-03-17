@@ -110,8 +110,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                     if (currentTime - lastProcessedTime >= FRAME_INTERVAL_MS) {
 
                         // Convert the camera frame to resized Bitmaps for each model
-                        Bitmap bitmapFA = imageToResizedBitmap(image, 128, 128);
-                        Bitmap bitmapMPFD = resizeAndPadMaintainAspectRatio(bitmapFA, 256, 256, 0);
+                        Bitmap bitmapMPFD = imageToResizedBitmap(image, 256, 256);
+                        Bitmap bitmapFA = resizeAndPadMaintainAspectRatio(bitmapMPFD, 128, 128, 0);
 
                         if (bitmapFA != null && bitmapMPFD != null) {
                             // Run inference on both models with the rotated, resized Bitmap

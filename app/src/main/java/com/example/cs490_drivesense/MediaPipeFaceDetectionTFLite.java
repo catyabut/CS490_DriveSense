@@ -41,7 +41,7 @@ public class MediaPipeFaceDetectionTFLite {
     private static final int OUTPUT_SIZE = 2; // Adjust based on model output
     private static final double BOX_SCORE_MIN_THRESHOLD = 0.25; // If sigmoid(boxScore) exceeds this value, face is detected 0.75 default
 
-    private static final int MAX_DETECTION_DATA = 10;
+    private static final int MAX_DETECTION_DATA = 10; //max number of previous mediapipe face detection data
     private MediaPipeFaceDetectionData lastValidResults = new MediaPipeFaceDetectionData(); //
     private Map<Integer, Object> rawOutputs;
     private FloatBuffer[] boxCoords = new FloatBuffer[896]; // 896 outputs
