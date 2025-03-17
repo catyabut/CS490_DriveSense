@@ -81,7 +81,6 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
     private void startCamera() {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
-
         cameraProviderFuture.addListener(() -> {
             try {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
@@ -255,7 +254,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
             // Convert YUV to RGB Bitmap
-            YuvImage yuvImage = new YuvImage(bytes, ImageFormat.YUY2, image.getWidth(), image.getHeight(), null);
+            YuvImage yuvImage = new YuvImage(bytes, ImageFormat.YUV_420_888, image.getWidth(), image.getHeight(), null);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             yuvImage.compressToJpeg(new android.graphics.Rect(0, 0, image.getWidth(), image.getHeight()), 100, outputStream);
             byte[] jpegBytes = outputStream.toByteArray();
