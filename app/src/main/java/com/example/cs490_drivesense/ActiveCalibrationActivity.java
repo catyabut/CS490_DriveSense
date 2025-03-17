@@ -22,7 +22,6 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.camera.camera2.interop.Camera2Interop;
 import androidx.camera.camera2.interop.Camera2Interop.Extender;
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop;
 import androidx.camera.core.*;
@@ -41,7 +40,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private static final long FRAME_INTERVAL_MS = 1000 / TARGET_FPS; //66ms interval for 15fps use
     private long lastProcessedTime = 0; //Timestamp of the last frame processed
     private static final int INPUT_SIZE = 256;
-    private static final double MAX_DIST_ALLOWED = 0.20; // Used to make sure the points are close enough for calibration
+    // Used to make sure the points are close enough for calibration
 
     private int counter = 0; // Used to ensure the first 5 results are collected before starting calibration
     private static final int CALIBRATION_FRAME_COUNT = 10; //To change the max frames needed for checking neutral position
@@ -103,7 +102,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
                 // ✅ Create ImageCapture.Builder for Camera2Interop
                 ImageCapture.Builder imageCaptureBuilder = new ImageCapture.Builder();
-                Camera2Interop.Extender<ImageCapture.Builder> extender = new Camera2Interop.Extender<>(imageCaptureBuilder);
+                Extender<ImageCapture> extender = new Extender<>(imageCaptureBuilder);
                 extender.setCaptureRequestOption(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT); // Fix green tint
                 ImageCapture imageCapture = imageCaptureBuilder.build(); // Build ImageCapture
 
