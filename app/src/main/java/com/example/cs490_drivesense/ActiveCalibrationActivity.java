@@ -12,6 +12,7 @@ import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.RectF;
 import android.graphics.YuvImage;
+import android.hardware.camera2.CaptureRequest;
 import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
@@ -21,6 +22,9 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.camera2.interop.Camera2Interop;
+import androidx.camera.camera2.interop.Camera2Interop.Extender;
+import androidx.camera.camera2.interop.ExperimentalCamera2Interop;
 import androidx.camera.core.*;
 import androidx.camera.lifecycle.ProcessCameraProvider;
 import androidx.camera.view.PreviewView;
@@ -83,6 +87,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     }
 
 
+    @OptIn(markerClass = ExperimentalCamera2Interop.class)
     private void startCamera() {
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
         cameraProviderFuture.addListener(() -> {
@@ -90,17 +95,22 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                 ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
 
                 CameraSelector cameraSelector = new CameraSelector.Builder()
-                        .requireLensFacing(CameraSelector.LENS_FACING_FRONT) // Use front camera for driver tracking
+                        .requireLensFacing(CameraSelector.LENS_FACING_FRONT) // Use the front camera
                         .build();
 
                 Preview preview = new Preview.Builder().build();
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
-                // Image analysis for real-time inference
+                // ✅ Create ImageCapture.Builder for Camera2Interop
+                ImageCapture.Builder imageCaptureBuilder = new ImageCapture.Builder();
+                Camera2Interop.Extender<ImageCapture.Builder> extender = new Camera2Interop.Extender<>(imageCaptureBuilder);
+                extender.setCaptureRequestOption(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT); // Fix green tint
+                ImageCapture imageCapture = imageCaptureBuilder.build(); // Build ImageCapture
+
+                // ✅ Image Analysis for real-time processing
                 ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
-                        //.setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
-                        .setTargetResolution(new android.util.Size(INPUT_SIZE, INPUT_SIZE)) // Match model input size 128 X 128
+                        .setTargetResolution(new android.util.Size(INPUT_SIZE, INPUT_SIZE))
                         .build();
 
                 // Set the analyzer for real-time frame processing
@@ -272,11 +282,12 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
         try {
 
+
             ByteBuffer buffer = image.getPlanes()[0].getBuffer();
             byte[] bytes = new byte[buffer.remaining()];
             buffer.get(bytes);
             // Convert YUV to RGB Bitmap
-            YuvImage yuvImage = new YuvImage(bytes, 35, image.getWidth(), image.getHeight(), null);
+            YuvImage yuvImage = new YuvImage(bytes, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             yuvImage.compressToJpeg(new android.graphics.Rect(0, 0, image.getWidth(), image.getHeight()), 100, outputStream);
             byte[] jpegBytes = outputStream.toByteArray();
