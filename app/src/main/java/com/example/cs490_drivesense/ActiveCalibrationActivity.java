@@ -192,57 +192,57 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 //        }
 
         // Check if the results are being passed correctly
-        Log.d("FacialAttributes", "Eye Openness Left: " + !attributeResults.eyeClosenessL);
-        Log.d("FacialAttributes", "Eye Openness Right: " + !attributeResults.eyeClosenessR);
-        Log.d("FacialAttributes", "Liveness: " + attributeResults.liveness);
-        Log.d("FacialAttributes", "Glasses: " + attributeResults.glasses);
-        Log.d("FacialAttributes", "Sunglasses: " + attributeResults.sunglasses);
-        Log.d("FacialAttributes", "Mask: " + attributeResults.mask);
-        // Check if results are displaying properly
-        Log.d("FaceDetectionResults", "Box Center (X, Y): " + " (" + faceDetectionResults.boxCenterX + ", " + faceDetectionResults.boxCenterY);
-        Log.d("FaceDetectionResults", "Box Width: " + faceDetectionResults.boxWidth);
-        Log.d("FaceDetectionResults", "Box Height: " + faceDetectionResults.boxHeight);
-        Log.d("FaceDetectionResults", "Right Eye (X, Y): " + " (" + faceDetectionResults.rightEyeX + ", " + faceDetectionResults.rightEyeY);
-        Log.d("FaceDetectionResults", "Left Eye (X, Y): " + " (" + faceDetectionResults.leftEyeX + ", " + faceDetectionResults.leftEyeY);
-        Log.d("FaceDetectionResults", "Nose Tip (X, Y): " + " (" + faceDetectionResults.noseTipX + ", " + faceDetectionResults.noseTipY);
-        Log.d("FaceDetectionResults", "Mouth Center (X, Y): " + " (" + faceDetectionResults.mouthCenterX + ", " + faceDetectionResults.mouthCenterY);
-        Log.d("FaceDetectionResults", "Right Ear (X, Y): " + " (" + faceDetectionResults.rightEarTragionX + ", " + faceDetectionResults.rightEarTragionY);
-        Log.d("FaceDetectionResults", "Left Ear (X, Y): " + " (" + faceDetectionResults.leftEarTragionX + ", " + faceDetectionResults.leftEarTragionY);
-        Log.d("FaceDetectionResults", "Face Detected: " + faceDetectionResults.faceDetected);
-
-        // Display results for attributes
-        TextView eyeOpennessText = findViewById(R.id.eyeOpennessText);
-        TextView livenessText = findViewById(R.id.livenessText);
-        TextView glassesText = findViewById(R.id.glassesText);
-        TextView maskText = findViewById(R.id.maskText);
-        TextView sunglassesText = findViewById(R.id.sunglassesText);
-
-        eyeOpennessText.setText("Eye Openness: Left: " + (!attributeResults.eyeClosenessL ? "True" : "False") + ", Right: " + (!attributeResults.eyeClosenessR ? "True" : "False"));
-        livenessText.setText("Liveness: " + (attributeResults.liveness ? "True" : "False"));
-        glassesText.setText("Glasses: " + (attributeResults.glasses ? "True" : "False"));
-        maskText.setText("Mask: " + (attributeResults.mask ? "True" : "False"));
-        sunglassesText.setText("Sunglasses: " + (attributeResults.sunglasses ? "True" : "False"));
-
-        // Display face detection results and key points
-        TextView faceDetectedText = findViewById(R.id.faceDetectedText);
-        TextView boxCenterText = findViewById(R.id.boxCenterText);
-        TextView boxWHText = findViewById(R.id.boxWHText);
-        TextView rightEyeText = findViewById(R.id.rightEyeText);
-        TextView leftEyeText = findViewById(R.id.leftEyeText);
-        TextView noseTipText = findViewById(R.id.noseTipText);
-        TextView mouthCenterText = findViewById(R.id.mouthCenterText);
-        TextView rightEarText = findViewById(R.id.rightEarText);
-        TextView leftEarText = findViewById(R.id.leftEarText);
-
-        faceDetectedText.setText("Face Detected: " + (faceDetectionResults.faceDetected ? "True" : "False"));
-        boxCenterText.setText("Box Center (X, Y): " + " (" + faceDetectionResults.boxCenterX + ", " + faceDetectionResults.boxCenterY);
-        boxWHText.setText("Box Width X Height: " + " (" + faceDetectionResults.boxWidth + ", " + faceDetectionResults.boxHeight);
-        rightEyeText.setText("Right Eye (X, Y): " + " (" + faceDetectionResults.rightEyeX + ", " + faceDetectionResults.rightEyeY);
-        leftEyeText.setText("Left Eye (X, Y): " + " (" + faceDetectionResults.leftEyeX + ", " + faceDetectionResults.leftEyeY);
-        noseTipText.setText("Nose Tip (X, Y): " + " (" + faceDetectionResults.noseTipX + ", " + faceDetectionResults.noseTipY);
-        mouthCenterText.setText("Mouth Center (X, Y): " + " (" + faceDetectionResults.mouthCenterX + ", " + faceDetectionResults.mouthCenterY);
-        rightEarText.setText("Right Ear (X, Y): " + " (" + faceDetectionResults.rightEarTragionX + ", " + faceDetectionResults.rightEarTragionY);
-        leftEarText.setText("Left Ear (X, Y): " + " (" + faceDetectionResults.leftEarTragionX + ", " + faceDetectionResults.leftEarTragionY);
+//        Log.d("FacialAttributes", "Eye Openness Left: " + !attributeResults.eyeClosenessL);
+//        Log.d("FacialAttributes", "Eye Openness Right: " + !attributeResults.eyeClosenessR);
+//        Log.d("FacialAttributes", "Liveness: " + attributeResults.liveness);
+//        Log.d("FacialAttributes", "Glasses: " + attributeResults.glasses);
+//        Log.d("FacialAttributes", "Sunglasses: " + attributeResults.sunglasses);
+//        Log.d("FacialAttributes", "Mask: " + attributeResults.mask);
+//        // Check if results are displaying properly
+//        Log.d("FaceDetectionResults", "Box Center (X, Y): " + " (" + faceDetectionResults.boxCenterX + ", " + faceDetectionResults.boxCenterY);
+//        Log.d("FaceDetectionResults", "Box Width: " + faceDetectionResults.boxWidth);
+//        Log.d("FaceDetectionResults", "Box Height: " + faceDetectionResults.boxHeight);
+//        Log.d("FaceDetectionResults", "Right Eye (X, Y): " + " (" + faceDetectionResults.rightEyeX + ", " + faceDetectionResults.rightEyeY);
+//        Log.d("FaceDetectionResults", "Left Eye (X, Y): " + " (" + faceDetectionResults.leftEyeX + ", " + faceDetectionResults.leftEyeY);
+//        Log.d("FaceDetectionResults", "Nose Tip (X, Y): " + " (" + faceDetectionResults.noseTipX + ", " + faceDetectionResults.noseTipY);
+//        Log.d("FaceDetectionResults", "Mouth Center (X, Y): " + " (" + faceDetectionResults.mouthCenterX + ", " + faceDetectionResults.mouthCenterY);
+//        Log.d("FaceDetectionResults", "Right Ear (X, Y): " + " (" + faceDetectionResults.rightEarTragionX + ", " + faceDetectionResults.rightEarTragionY);
+//        Log.d("FaceDetectionResults", "Left Ear (X, Y): " + " (" + faceDetectionResults.leftEarTragionX + ", " + faceDetectionResults.leftEarTragionY);
+//        Log.d("FaceDetectionResults", "Face Detected: " + faceDetectionResults.faceDetected);
+//
+//        // Display results for attributes
+//        TextView eyeOpennessText = findViewById(R.id.eyeOpennessText);
+//        TextView livenessText = findViewById(R.id.livenessText);
+//        TextView glassesText = findViewById(R.id.glassesText);
+//        TextView maskText = findViewById(R.id.maskText);
+//        TextView sunglassesText = findViewById(R.id.sunglassesText);
+//
+//        eyeOpennessText.setText("Eye Openness: Left: " + (!attributeResults.eyeClosenessL ? "True" : "False") + ", Right: " + (!attributeResults.eyeClosenessR ? "True" : "False"));
+//        livenessText.setText("Liveness: " + (attributeResults.liveness ? "True" : "False"));
+//        glassesText.setText("Glasses: " + (attributeResults.glasses ? "True" : "False"));
+//        maskText.setText("Mask: " + (attributeResults.mask ? "True" : "False"));
+//        sunglassesText.setText("Sunglasses: " + (attributeResults.sunglasses ? "True" : "False"));
+//
+//        // Display face detection results and key points
+//        TextView faceDetectedText = findViewById(R.id.faceDetectedText);
+//        TextView boxCenterText = findViewById(R.id.boxCenterText);
+//        TextView boxWHText = findViewById(R.id.boxWHText);
+//        TextView rightEyeText = findViewById(R.id.rightEyeText);
+//        TextView leftEyeText = findViewById(R.id.leftEyeText);
+//        TextView noseTipText = findViewById(R.id.noseTipText);
+//        TextView mouthCenterText = findViewById(R.id.mouthCenterText);
+//        TextView rightEarText = findViewById(R.id.rightEarText);
+//        TextView leftEarText = findViewById(R.id.leftEarText);
+//
+//        faceDetectedText.setText("Face Detected: " + (faceDetectionResults.faceDetected ? "True" : "False"));
+//        boxCenterText.setText("Box Center (X, Y): " + " (" + faceDetectionResults.boxCenterX + ", " + faceDetectionResults.boxCenterY);
+//        boxWHText.setText("Box Width X Height: " + " (" + faceDetectionResults.boxWidth + ", " + faceDetectionResults.boxHeight);
+//        rightEyeText.setText("Right Eye (X, Y): " + " (" + faceDetectionResults.rightEyeX + ", " + faceDetectionResults.rightEyeY);
+//        leftEyeText.setText("Left Eye (X, Y): " + " (" + faceDetectionResults.leftEyeX + ", " + faceDetectionResults.leftEyeY);
+//        noseTipText.setText("Nose Tip (X, Y): " + " (" + faceDetectionResults.noseTipX + ", " + faceDetectionResults.noseTipY);
+//        mouthCenterText.setText("Mouth Center (X, Y): " + " (" + faceDetectionResults.mouthCenterX + ", " + faceDetectionResults.mouthCenterY);
+//        rightEarText.setText("Right Ear (X, Y): " + " (" + faceDetectionResults.rightEarTragionX + ", " + faceDetectionResults.rightEarTragionY);
+//        leftEarText.setText("Left Ear (X, Y): " + " (" + faceDetectionResults.leftEarTragionX + ", " + faceDetectionResults.leftEarTragionY);
 
         TextView calibrationStatusText = findViewById(R.id.calibrationStatusText);
 
