@@ -1,6 +1,10 @@
 package com.example.cs490_drivesense;
 
+import static android.graphics.ColorSpace.Named.SRGB;
 import static com.example.cs490_drivesense.MediaPipeFaceDetectionTFLite.distBetweenPoints;
+
+import static org.opencv.core.CvType.CV_8UC1;
+import static org.opencv.imgproc.Imgproc.cvtColor;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -8,6 +12,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorSpace;
 import android.graphics.ImageFormat;
 import android.graphics.Matrix;
 import android.graphics.RectF;
@@ -30,6 +35,13 @@ import androidx.camera.view.PreviewView;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.google.common.util.concurrent.ListenableFuture;
+
+import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
+import org.opencv.core.CvException;
+import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
+
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
@@ -59,6 +71,10 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        OpenCVLoader.initLocal(); // load opencv
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inPreferredColorSpace = ColorSpace.get(ColorSpace.Named.SRGB); // set colorspace as SRGB
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_active_calibration);
 
@@ -280,19 +296,39 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         if (image == null) return null;
 
         try {
+            byte[] nv21;
+            ByteBuffer yBuffer = image.getPlanes()[0].getBuffer();
+            ByteBuffer uBuffer = image.getPlanes()[1].getBuffer();
+            ByteBuffer vBuffer = image.getPlanes()[2].getBuffer();
+
+            int ySize = yBuffer.remaining();
+            int uSize = uBuffer.remaining();
+            int vSize = vBuffer.remaining();
+
+            nv21 = new byte[ySize + uSize + vSize];
+
+            //U and V are swapped
+            yBuffer.get(nv21, 0, ySize);
+            vBuffer.get(nv21, ySize, vSize);
+            uBuffer.get(nv21, ySize + vSize, uSize);
+
+            Mat mRGB = getYUV2Mat(nv21, image);
+
+            Bitmap bitmap = convertMatToBitMap(mRGB);
 
 
-            ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-            byte[] bytes = new byte[buffer.remaining()];
-            buffer.get(bytes);
-            // Convert YUV to RGB Bitmap
-            YuvImage yuvImage = new YuvImage(bytes, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            yuvImage.compressToJpeg(new android.graphics.Rect(0, 0, image.getWidth(), image.getHeight()), 100, outputStream);
-            byte[] jpegBytes = outputStream.toByteArray();
+            // old code
+//            ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+//            byte[] bytes = new byte[buffer.remaining()];
+//            buffer.get(bytes);
+//            // Convert YUV to RGB Bitmap
+//            YuvImage yuvImage = new YuvImage(bytes, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
+//            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+//            yuvImage.compressToJpeg(new android.graphics.Rect(0, 0, image.getWidth(), image.getHeight()), 100, outputStream);
+//            byte[] jpegBytes = outputStream.toByteArray();
 
             // Decode the byte array into a Bitmap
-            Bitmap bitmap = BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.length);
+//            Bitmap bitmap = BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.length);
 
             // Get rotation from ImageProxy metadata
             int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
@@ -311,6 +347,31 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         } finally {
             image.close(); // Ensure image is closed in case of error
         }
+    }
+
+    // Create Mat from YUV
+    public Mat getYUV2Mat(byte[] data, Image image) {
+        Mat mYuv = new Mat(image.getHeight() + image.getHeight() / 2, image.getWidth(), CV_8UC1);
+        mYuv.put(0, 0, data);
+        Mat mRGB = new Mat();
+        cvtColor(mYuv, mRGB, Imgproc.COLOR_YUV2RGB_NV21, 3);
+        return mRGB;
+    }
+
+    // Turn Mat into bitmap
+    private static Bitmap convertMatToBitMap(Mat input){
+        Bitmap bmp = null;
+        Mat rgb = new Mat();
+        Imgproc.cvtColor(input, rgb, Imgproc.COLOR_RGB2RGBA);
+
+        try {
+            bmp = Bitmap.createBitmap(rgb.cols(), rgb.rows(), Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(rgb, bmp);
+        }
+        catch (CvException e){
+            Log.d("Exception",e.getMessage());
+        }
+        return bmp;
     }
 
     // Resize bitmap from another bitmap
