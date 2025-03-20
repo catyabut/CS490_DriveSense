@@ -7,6 +7,7 @@ import java.time.ZonedDateTime;
 public class SessionTimer {
     private ZonedDateTime start; // Start time var
     private ZonedDateTime stop;  // Stop time var
+    public boolean timerActive = false;
 
 
     // Get Current timestamp in phones time zone
@@ -18,12 +19,14 @@ public class SessionTimer {
     // Start timer
     public void startTimer()
     {
+        this.timerActive = true;
         this.start = ZonedDateTime.now();
     }
 
     // Stop timer
     public void stopTimer()
     {
+        this.timerActive = false;
         this.stop = ZonedDateTime.now();
     }
 
