@@ -287,7 +287,10 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                             lastProcessedTime = currentTime;
 
                             // Update the UI with the results
-                            runOnUiThread(() -> updateAttributesUI(faceAttributeResults,faceDetectionResults));
+                            if (!isCalibrationComplete) {
+                                runOnUiThread(() -> updateAttributesUI(faceAttributeResults, faceDetectionResults));
+                            }
+
                         }
                     }
                     image.close();
