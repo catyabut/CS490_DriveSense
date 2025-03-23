@@ -56,6 +56,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private LinearLayout messageLayout;
     private ImageButton cameraToggleButton;
     private ImageButton exportButton;
+    private TextView deviationWarningText;
     private boolean isCameraOn = false;
     private boolean isCalibrationComplete = false;
 
@@ -138,7 +139,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         messageLayout = findViewById(R.id.messageLayout);
         cameraToggleButton = findViewById(R.id.cameraToggleButton);
         exportButton = findViewById(R.id.exportButton);
-        TextView deviationWarningText = findViewById(R.id.deviationWarningText);
+        deviationWarningText = findViewById(R.id.deviationWarningText);
 
         cameraToggleButton.setOnClickListener(view -> {
             if(!isCalibrationComplete) return; //Prevent toggling before calibration
@@ -247,8 +248,9 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                         if(elapsed >= DEVIATION_THRESHOLD_MS) {
                                             runOnUiThread(() -> {
                                                 //Show the warning text
-                                                TextView deviationWarningText = findViewById(R.id.deviationWarningText);
-                                                deviationWarningText.setVisibility(View.VISIBLE);
+                                                if(deviationWarningText != null){
+                                                    deviationWarningText.setVisibility(View.VISIBLE);
+                                                }
 
                                                 // Play sound here
                                                 if(mediaPlayer == null) {
@@ -265,8 +267,9 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                     //Driver is not deviating, reset the state
                                     isCurrentlyDeviating = false;
                                     deviationStartTime = 0;
-                                    TextView deviationWarningText = findViewById(R.id.deviationWarningText);
-                                    deviationWarningText.setVisibility(View.GONE);
+                                    if(deviationWarningText != null) {
+                                        deviationWarningText.setVisibility(View.GONE);
+                                    }
 
                                     //Stop and release the sound if playing
                                     if(mediaPlayer != null && mediaPlayer.isPlaying()) {
