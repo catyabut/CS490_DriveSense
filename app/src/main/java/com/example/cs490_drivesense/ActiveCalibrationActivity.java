@@ -200,28 +200,10 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                             FacialAttributeData faceAttributeResults = facialAttributeDetector.detectFacialAttributes(bitmapFA);
                             MediaPipeFaceDetectionData faceDetectionResults = faceDetector.detectFace(bitmapMPFD);
 
-                            runOnUiThread(() -> {
-                                FaceOverlayView faceOverlay = findViewById(R.id.faceOverlay);
-                                if (faceOverlay != null && faceDetectionResults.faceDetected) {
-                                    float scaleX = previewView.getWidth() / (float) bitmapMPFD.getWidth();
-                                    float scaleY = previewView.getHeight() / (float) bitmapMPFD.getHeight();
-
-                                    float left = (float) (faceDetectionResults.boxCenterX - faceDetectionResults.boxWidth / 2.0);
-                                    float top = (float) (faceDetectionResults.boxCenterY - faceDetectionResults.boxHeight / 2.0);
-                                    float right = (float) (left + faceDetectionResults.boxWidth);
-                                    float bottom = (float) (top + faceDetectionResults.boxHeight);
-
-                                    RectF box = new RectF(
-                                            left * scaleX,
-                                            top * scaleY,
-                                            right * scaleX,
-                                            bottom * scaleY
-                                    );
-
-                                    faceOverlay.updateBox(box);
-                                }
-                            });
-
+                            //draw the facebox
+                            if (!isCalibrationComplete) {
+                                drawFaceBox(faceDetectionResults, bitmapMPFD);
+                            }
 
                             // Make sure first 10 results are recorded first before calibrating
                             if (this.counter < CALIBRATION_FRAME_COUNT)
@@ -259,32 +241,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
                             if (isCalibrationComplete && isPostCalibLayoutRdy) {
                                 Log.d("DetectionLoop", "Calibration is complete and Layout is ready.");
-
-                                // Draw bounding box ONLY if camera interface is visible
-                                if (isCameraOn) {
-                                    runOnUiThread(() -> {
-                                        FaceOverlayView faceOverlay = findViewById(R.id.faceOverlay);
-                                        if (faceOverlay != null && faceDetectionResults.faceDetected) {
-                                            float scaleX = previewView.getWidth() / (float) bitmapMPFD.getWidth();
-                                            float scaleY = previewView.getHeight() / (float) bitmapMPFD.getHeight();
-
-                                            float left = (float) (faceDetectionResults.boxCenterX - faceDetectionResults.boxWidth / 2.0);
-                                            float top = (float) (faceDetectionResults.boxCenterY - faceDetectionResults.boxHeight / 2.0);
-                                            float right = (float) (left + faceDetectionResults.boxWidth);
-                                            float bottom = (float) (top + faceDetectionResults.boxHeight);
-
-                                            RectF box = new RectF(
-                                                    left * scaleX,
-                                                    top * scaleY,
-                                                    right * scaleX,
-                                                    bottom * scaleY
-                                            );
-
-                                            faceOverlay.updateBox(box);
-                                        }
-                                    });
-                                }
-
+                                drawFaceBox(faceDetectionResults, bitmapMPFD);
                                 // Deviation check logic
                                 MediaPipeFaceDetectionData neutral = faceDetector.getNeutralPosition();
                                 if (neutral == null) {
@@ -719,6 +676,32 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         return deviating;
     }
 
+    private void drawFaceBox(MediaPipeFaceDetectionData faceData, Bitmap inputBitmap) {
+        runOnUiThread(() -> {
+            FaceOverlayView faceOverlay = findViewById(R.id.faceOverlay);
+            if (faceOverlay != null && faceData.faceDetected && isCameraOn) {
+                float scaleX = previewView.getWidth() / (float) inputBitmap.getWidth();
+                float scaleY = previewView.getHeight() / (float) inputBitmap.getHeight();
+
+                float left = (float) (faceData.boxCenterX - faceData.boxWidth / 2.0);
+                float top = (float) (faceData.boxCenterY - faceData.boxHeight / 2.0);
+                float right = (float) (left + faceData.boxWidth);
+                float bottom = (float) (top + faceData.boxHeight);
+
+                RectF box = new RectF(
+                        left * scaleX,
+                        top * scaleY,
+                        right * scaleX,
+                        bottom * scaleY
+                );
+
+                faceOverlay.updateBox(box);
+                faceOverlay.setVisibility(View.VISIBLE);
+            } else if (faceOverlay != null) {
+                faceOverlay.setVisibility(View.GONE);
+            }
+        });
+    }
 
 
 

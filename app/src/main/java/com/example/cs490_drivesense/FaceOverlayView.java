@@ -37,16 +37,9 @@ public class FaceOverlayView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
-        if (currentBox != null && targetBox != null) {
-            // Interpolate between currentBox and targetBox
-            currentBox.left += (targetBox.left - currentBox.left) * 0.2f;
-            currentBox.top += (targetBox.top - currentBox.top) * 0.2f;
-            currentBox.right += (targetBox.right - currentBox.right) * 0.2f;
-            currentBox.bottom += (targetBox.bottom - currentBox.bottom) * 0.2f;
-
-            canvas.drawRect(currentBox, boxPaint);
-            postInvalidateDelayed(16); // ~60fps
+        if (currentBox != null) {
+            float cornerRadius = 30f; // adjust for how round you want the corners
+            canvas.drawRoundRect(currentBox, cornerRadius, cornerRadius, boxPaint);
         }
     }
 }
