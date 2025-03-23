@@ -58,6 +58,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private ImageButton exportButton;
     private boolean isCameraOn = false;
     private boolean isCalibrationComplete = false;
+
+    private boolean isPostCalibLayoutRdy = false;
     //************************************************************
     private static final int TARGET_FPS = 15;
     private static final long FRAME_INTERVAL_MS = 1000 / TARGET_FPS; //66ms interval for 15fps use
@@ -130,6 +132,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
      */
     private void showPostCalibrationLayout(){
         setContentView(R.layout.activity_main_detection);
+        isPostCalibLayoutRdy = true;
 
         previewView = findViewById(R.id.previewView);
         messageLayout = findViewById(R.id.messageLayout);
@@ -216,51 +219,6 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                         isCalibrationComplete = true;
                                         runOnUiThread(this::showPostCalibrationLayout); //loading the new layout after success
 
-                                        if(isCalibrationComplete){
-                                            MediaPipeFaceDetectionData neutral = faceDetector.getNeutralPosition();
-                                            boolean deviating = isDeviatingFromNeutral(faceDetectionResults,neutral);
-
-                                            if(deviating) {
-                                                if(!isCurrentlyDeviating) {
-                                                    //First frame where deviation started
-                                                    deviationStartTime = System.currentTimeMillis();
-                                                    isCurrentlyDeviating = true;
-                                                } else {
-                                                    long elapsed = System.currentTimeMillis() - deviationStartTime;
-                                                    if(elapsed >= DEVIATION_THRESHOLD_MS) {
-                                                        runOnUiThread(() -> {
-                                                            //Show the warning text
-                                                            TextView deviationWarningText = findViewById(R.id.deviationWarningText);
-                                                            deviationWarningText.setVisibility(View.VISIBLE);
-
-                                                            // Play sound here
-                                                            if(mediaPlayer == null) {
-                                                                mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
-                                                                mediaPlayer.setLooping(true);
-                                                                mediaPlayer.start();
-                                                            }
-                                                        });
-                                                        Log.w("WARNING", "Driver has been looking away for more than 5 seconds!");
-                                                    }
-                                                }
-                                            }
-                                            else {
-                                                //Driver is not deviating, reset the state
-                                                isCurrentlyDeviating = false;
-                                                deviationStartTime = 0;
-                                                TextView deviationWarningText = findViewById(R.id.deviationWarningText);
-                                                deviationWarningText.setVisibility(View.GONE);
-
-                                                //Stop and release the sound if playing
-                                                if(mediaPlayer != null && mediaPlayer.isPlaying()) {
-                                                    mediaPlayer.stop();
-                                                    mediaPlayer.release();
-                                                    mediaPlayer = null;
-                                                }
-                                            }
-
-                                        }
-
                                     }
                                     // User moved too much do not set the neutral position
                                     else
@@ -273,6 +231,51 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                 {
                                     Log.d("Calibration", "ERROR: Face was not detected 5 times, last 5 records needs to have detected a face.");
                                 }
+                            }
+
+                            if(isCalibrationComplete && isPostCalibLayoutRdy){
+                                MediaPipeFaceDetectionData neutral = faceDetector.getNeutralPosition();
+                                boolean deviating = isDeviatingFromNeutral(faceDetectionResults,neutral);
+
+                                if(deviating) {
+                                    if(!isCurrentlyDeviating) {
+                                        //First frame where deviation started
+                                        deviationStartTime = System.currentTimeMillis();
+                                        isCurrentlyDeviating = true;
+                                    } else {
+                                        long elapsed = System.currentTimeMillis() - deviationStartTime;
+                                        if(elapsed >= DEVIATION_THRESHOLD_MS) {
+                                            runOnUiThread(() -> {
+                                                //Show the warning text
+                                                TextView deviationWarningText = findViewById(R.id.deviationWarningText);
+                                                deviationWarningText.setVisibility(View.VISIBLE);
+
+                                                // Play sound here
+                                                if(mediaPlayer == null) {
+                                                    mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
+                                                    mediaPlayer.setLooping(true);
+                                                    mediaPlayer.start();
+                                                }
+                                            });
+                                            Log.w("WARNING", "Driver has been looking away for more than 5 seconds!");
+                                        }
+                                    }
+                                }
+                                else {
+                                    //Driver is not deviating, reset the state
+                                    isCurrentlyDeviating = false;
+                                    deviationStartTime = 0;
+                                    TextView deviationWarningText = findViewById(R.id.deviationWarningText);
+                                    deviationWarningText.setVisibility(View.GONE);
+
+                                    //Stop and release the sound if playing
+                                    if(mediaPlayer != null && mediaPlayer.isPlaying()) {
+                                        mediaPlayer.stop();
+                                        mediaPlayer.release();
+                                        mediaPlayer = null;
+                                    }
+                                }
+
                             }
 
                             // Debug logs to check if MediaPipe is detecting faces
