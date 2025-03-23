@@ -11,6 +11,14 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
+    <!-- Face Bounding Box & Landmark Overlay -->
+    <com.example.cs490_drivesense.FaceOverlayView
+        android:id="@+id/faceOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:background="@android:color/transparent" />
+
     <LinearLayout
         android:id="@+id/resultsLayout"
         android:layout_width="match_parent"

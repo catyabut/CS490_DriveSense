@@ -200,6 +200,29 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                             FacialAttributeData faceAttributeResults = facialAttributeDetector.detectFacialAttributes(bitmapFA);
                             MediaPipeFaceDetectionData faceDetectionResults = faceDetector.detectFace(bitmapMPFD);
 
+                            runOnUiThread(() -> {
+                                FaceOverlayView faceOverlay = findViewById(R.id.faceOverlay);
+                                if (faceOverlay != null && faceDetectionResults.faceDetected) {
+                                    float scaleX = previewView.getWidth() / (float) bitmapMPFD.getWidth();
+                                    float scaleY = previewView.getHeight() / (float) bitmapMPFD.getHeight();
+
+                                    float left = (float) (faceDetectionResults.boxCenterX - faceDetectionResults.boxWidth / 2.0);
+                                    float top = (float) (faceDetectionResults.boxCenterY - faceDetectionResults.boxHeight / 2.0);
+                                    float right = (float) (left + faceDetectionResults.boxWidth);
+                                    float bottom = (float) (top + faceDetectionResults.boxHeight);
+
+                                    RectF box = new RectF(
+                                            left * scaleX,
+                                            top * scaleY,
+                                            right * scaleX,
+                                            bottom * scaleY
+                                    );
+
+                                    faceOverlay.updateBox(box);
+                                }
+                            });
+
+
                             // Make sure first 10 results are recorded first before calibrating
                             if (this.counter < CALIBRATION_FRAME_COUNT)
                             {
