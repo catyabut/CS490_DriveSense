@@ -59,8 +59,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private TextView deviationWarningText;
     private boolean isCameraOn = false;
     private boolean isCalibrationComplete = false;
-
     private boolean isPostCalibLayoutRdy = false;
+    private Preview preview; //camera work for after calibration
     //************************************************************
     private static final int TARGET_FPS = 15;
     private static final long FRAME_INTERVAL_MS = 1000 / TARGET_FPS; //66ms interval for 15fps use
@@ -135,7 +135,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main_detection);
         isPostCalibLayoutRdy = true;
 
-        previewView = findViewById(R.id.previewView);
+        previewView = findViewById(R.id.previewViewAC); //from new layout
         messageLayout = findViewById(R.id.messageLayout);
         cameraToggleButton = findViewById(R.id.cameraToggleButton);
         exportButton = findViewById(R.id.exportButton);
@@ -144,18 +144,15 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         previewView.setVisibility(View.VISIBLE);
         messageLayout.setVisibility(View.GONE);
 
+        // Re-bind the camera surface provider
+        preview.setSurfaceProvider(previewView.getSurfaceProvider());
+
         cameraToggleButton.setOnClickListener(view -> {
             if(!isCalibrationComplete) return; //Prevent toggling before calibration
-
             isCameraOn = !isCameraOn; //Toggle state
 
-            if(isCameraOn) {
-                previewView.setVisibility(PreviewView.VISIBLE);
-                messageLayout.setVisibility(View.GONE);
-            } else {
-                previewView.setVisibility(View.GONE);
-                messageLayout.setVisibility(View.VISIBLE);
-            }
+            previewView.setVisibility(isCameraOn ? View.VISIBLE : View.GONE);
+            messageLayout.setVisibility(isCameraOn ? View.GONE : View.VISIBLE);
         });
 
         //Export button function here
@@ -173,7 +170,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                         .requireLensFacing(CameraSelector.LENS_FACING_FRONT) // Use the front camera
                         .build();
 
-                Preview preview = new Preview.Builder().build();
+                preview = new Preview.Builder().build();
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
                 //Create ImageCapture.Builder for Camera2Interop
@@ -222,10 +219,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                         faceDetector.setNeutralPosition(faceDetectionResults);
                                         isCalibrationComplete = true;
 
-                                        runOnUiThread(() -> {
-                                            showPostCalibrationLayout();
-                                            deviationWarningText = findViewById(R.id.deviationWarningText);
-                                        });
+                                        runOnUiThread(this::showPostCalibrationLayout);
                                     }
                                     // User moved too much do not set the neutral position
                                     else
@@ -241,6 +235,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                             }
 
                             if(isCalibrationComplete && isPostCalibLayoutRdy){
+                                Log.d("DetectionLoop", "Calibration is complete and Layout is ready.");
                                 MediaPipeFaceDetectionData neutral = faceDetector.getNeutralPosition();
                                 boolean deviating = isDeviatingFromNeutral(faceDetectionResults,neutral);
 
@@ -254,11 +249,13 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                 });
 
                                 if(deviating) {
+                                    Log.d("DetectionLoop", "In deviating if statement.");
                                     if(!isCurrentlyDeviating) {
                                         //First frame where deviation started
                                         deviationStartTime = System.currentTimeMillis();
                                         isCurrentlyDeviating = true;
                                     } else {
+                                        Log.d("DetectionLoop", "User is deviating.");
                                         long elapsed = System.currentTimeMillis() - deviationStartTime;
                                         if(elapsed >= DEVIATION_THRESHOLD_MS) {
                                             runOnUiThread(() -> {
