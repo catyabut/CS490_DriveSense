@@ -39,6 +39,9 @@ dependencies {
     implementation libs.litert
     implementation libs.litert.support.api
 
+    //For OpenCV
+    implementation(libs.opencv)
+
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity

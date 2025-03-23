@@ -19,6 +19,7 @@ renderscriptIntrinsicsReplacementToolkit = "b6363490c3"
 tensorflowCorePlatform = "0.3.3"
 tensorflowCorePlatformVersion = "0.5.0"
 tensorflowLiteSupport = "2.9.0"
+opencv = "4.11.0"
 
 [libraries]
 camera-camera2 = { module = "androidx.camera:camera-camera2", version.ref = "cameraCamera2" }
@@ -41,6 +42,7 @@ tensorflow-core-platform = { module = "org.tensorflow:tensorflow-core-platform",
 tensorflow-core-platform-v050 = { module = "org.tensorflow:tensorflow-core-platform", version.ref = "tensorflowCorePlatformVersion" }
 tensorflow-lite = { module = "org.tensorflow:tensorflow-lite", version.ref = "tensorflowLiteSupport" }
 tensorflow-lite-support = { module = "org.tensorflow:tensorflow-lite-support", version.ref = "tensorflowLiteSupport" }
+opencv = { module = "org.opencv:opencv", version.ref = "opencv"}
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

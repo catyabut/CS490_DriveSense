@@ -18,7 +18,7 @@ public class DriveSenseApplication extends Application {
                 AssetManager assetManager = getAssets();
                 facialAttributeDetector = new FacialAttributeDetectorTFLite(assetManager);
                 mediaPipeFaceDetector = new MediaPipeFaceDetectionTFLite(assetManager);
-                runOnUiThread(() -> Toast.makeText(this, "AI Models Loaded!", Toast.LENGTH_SHORT).show());
+                //runOnUiThread(() -> Toast.makeText(this, "AI Models Loaded!", Toast.LENGTH_SHORT).show());
             } catch (Exception e) {
                 runOnUiThread(() -> Toast.makeText(this, "Error loading AI model!", Toast.LENGTH_LONG).show());
             }

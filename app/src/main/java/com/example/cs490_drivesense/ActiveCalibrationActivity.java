@@ -19,8 +19,11 @@ import android.graphics.RectF;
 import android.graphics.YuvImage;
 import android.hardware.camera2.CaptureRequest;
 import android.media.Image;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -49,27 +52,41 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class ActiveCalibrationActivity extends AppCompatActivity {
+    //*****************Main Detection Layout**********************
+    private LinearLayout messageLayout;
+    private ImageButton cameraToggleButton;
+    private ImageButton exportButton;
+    private boolean isCameraOn = false;
+    private boolean isCalibrationComplete = false;
+    //************************************************************
     private static final int TARGET_FPS = 15;
     private static final long FRAME_INTERVAL_MS = 1000 / TARGET_FPS; //66ms interval for 15fps use
     private long lastProcessedTime = 0; //Timestamp of the last frame processed
     private static final int INPUT_SIZE = 256;
     // Used to make sure the points are close enough for calibration
 
+    //***************Calibration Private Variables***************
     private int counter = 0; // Used to ensure the first 5 results are collected before starting calibration
     private static final int CALIBRATION_FRAME_COUNT = 10; //To change the max frames needed for checking neutral position
     private static final double MAX_DEVIATION_THRESHOLD = 0.5; // Used to tell if driver deviates from neutral
+    private long deviationStartTime = 0;
+    private boolean isCurrentlyDeviating = false;
+    private static final long DEVIATION_THRESHOLD_MS = 5000; //5 seconds
 
-    //***************Camera private variables********************
+    private MediaPlayer mediaPlayer;
     private LinearLayout resultsLayout; //Declare resultsLayout
+    //***************Camera private variables********************
     private PreviewView previewView;
     private ExecutorService cameraExecutor;
     private static final int CAMERA_PERMISSION_CODE = 100;
-
+    //***********************************************************
+    //Private Variables for the Models: Facial Attribute Detection Model & Mediapipe Face Detection Model
     //FADM private variable
     private FacialAttributeDetectorTFLite facialAttributeDetector; // TFLite Model
 
     //MPFD private variable
     private MediaPipeFaceDetectionTFLite faceDetector; // TFLite Model
+    //***********************************************************
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -80,16 +97,21 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_active_calibration);
 
+        //*************initializing UI elements*******************
+        //This is for AFTER CALIBRATION IS COMPLETED
+        //Camera View
         previewView = findViewById(R.id.previewView);
-        // Results layout not found
+        //Results layout
         resultsLayout = findViewById(R.id.resultsLayout);
+        //*********************************************************
 
-        //Retrieve preloaded model from the Application class
+        //Retrieve preloaded model from the DriveSenseApplication class
         facialAttributeDetector = ((DriveSenseApplication) getApplication()).getFacialAttributeModel();
         faceDetector = ((DriveSenseApplication) getApplication()).getMediaPipeFaceDetectionModel();
 
-        if (facialAttributeDetector == null) {
-            Log.e("ActiveCalibration", "TFLite model was NOT preloaded!");
+        //Check if the FADM is NULL & MPFD is NULL
+        if (facialAttributeDetector == null || faceDetector == null) {
+            Log.e("ActiveCalibration", "TFLite models was NOT preloaded!");
         }
 
         // Check and request camera permissions
@@ -101,6 +123,35 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
         cameraExecutor = Executors.newSingleThreadExecutor();
 
+    }
+
+    /*
+    Function is for showing the layout after the calibration is done
+     */
+    private void showPostCalibrationLayout(){
+        setContentView(R.layout.activity_main_detection);
+
+        previewView = findViewById(R.id.previewView);
+        messageLayout = findViewById(R.id.messageLayout);
+        cameraToggleButton = findViewById(R.id.cameraToggleButton);
+        exportButton = findViewById(R.id.exportButton);
+        TextView deviationWarningText = findViewById(R.id.deviationWarningText);
+
+        cameraToggleButton.setOnClickListener(view -> {
+            if(!isCalibrationComplete) return; //Prevent toggling before calibration
+
+            isCameraOn = !isCameraOn; //Toggle state
+
+            if(isCameraOn) {
+                previewView.setVisibility(PreviewView.VISIBLE);
+                messageLayout.setVisibility(View.GONE);
+            } else {
+                previewView.setVisibility(View.GONE);
+                messageLayout.setVisibility(View.VISIBLE);
+            }
+        });
+
+        //Export button function here
     }
 
 
@@ -118,13 +169,13 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                 Preview preview = new Preview.Builder().build();
                 preview.setSurfaceProvider(previewView.getSurfaceProvider());
 
-                // ✅ Create ImageCapture.Builder for Camera2Interop
+                //Create ImageCapture.Builder for Camera2Interop
                 ImageCapture.Builder imageCaptureBuilder = new ImageCapture.Builder();
                 Extender<ImageCapture> extender = new Extender<>(imageCaptureBuilder);
                 extender.setCaptureRequestOption(CaptureRequest.CONTROL_AWB_MODE, CaptureRequest.CONTROL_AWB_MODE_FLUORESCENT); // Fix green tint
                 ImageCapture imageCapture = imageCaptureBuilder.build(); // Build ImageCapture
 
-                // ✅ Image Analysis for real-time processing
+                //Image Analysis for real-time processing
                 ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
                         .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
                         .setTargetResolution(new android.util.Size(INPUT_SIZE, INPUT_SIZE))
@@ -153,7 +204,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                             // Calibrate the system to generate the neutral position
                             else
                             {
-                                boolean faceDetectedAllResults = this.faceDetectedXTimes(faceDetector.lastXResults); // Check last 5 position for extreme movement
+                                boolean faceDetectedAllResults = this.faceDetectedXTimes(faceDetector.lastXResults); // Check last X positions for extreme movement
                                 // Check if user moved
                                 if (faceDetectedAllResults)
                                 {
@@ -162,6 +213,54 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                     if (userStill)
                                     {
                                         faceDetector.setNeutralPosition(faceDetectionResults);
+                                        isCalibrationComplete = true;
+                                        runOnUiThread(this::showPostCalibrationLayout); //loading the new layout after success
+
+                                        if(isCalibrationComplete){
+                                            MediaPipeFaceDetectionData neutral = faceDetector.getNeutralPosition();
+                                            boolean deviating = isDeviatingFromNeutral(faceDetectionResults,neutral);
+
+                                            if(deviating) {
+                                                if(!isCurrentlyDeviating) {
+                                                    //First frame where deviation started
+                                                    deviationStartTime = System.currentTimeMillis();
+                                                    isCurrentlyDeviating = true;
+                                                } else {
+                                                    long elapsed = System.currentTimeMillis() - deviationStartTime;
+                                                    if(elapsed >= DEVIATION_THRESHOLD_MS) {
+                                                        runOnUiThread(() -> {
+                                                            //Show the warning text
+                                                            TextView deviationWarningText = findViewById(R.id.deviationWarningText);
+                                                            deviationWarningText.setVisibility(View.VISIBLE);
+
+                                                            // Play sound here
+                                                            if(mediaPlayer == null) {
+                                                                mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
+                                                                mediaPlayer.setLooping(true);
+                                                                mediaPlayer.start();
+                                                            }
+                                                        });
+                                                        Log.w("WARNING", "Driver has been looking away for more than 5 seconds!");
+                                                    }
+                                                }
+                                            }
+                                            else {
+                                                //Driver is not deviating, reset the state
+                                                isCurrentlyDeviating = false;
+                                                deviationStartTime = 0;
+                                                TextView deviationWarningText = findViewById(R.id.deviationWarningText);
+                                                deviationWarningText.setVisibility(View.GONE);
+
+                                                //Stop and release the sound if playing
+                                                if(mediaPlayer != null && mediaPlayer.isPlaying()) {
+                                                    mediaPlayer.stop();
+                                                    mediaPlayer.release();
+                                                    mediaPlayer = null;
+                                                }
+                                            }
+
+                                        }
+
                                     }
                                     // User moved too much do not set the neutral position
                                     else
@@ -185,7 +284,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                             lastProcessedTime = currentTime;
 
                             // Update the UI with the results
-                            runOnUiThread(() -> updateAttributesUI(faceAttributeResults, faceDetectionResults));
+                            runOnUiThread(() -> updateAttributesUI(faceAttributeResults,faceDetectionResults));
                         }
                     }
                     image.close();
@@ -209,58 +308,58 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 //            return; // Skip updating UI if no face detected
 //        }
 
-        // Check if the results are being passed correctly
-        Log.d("FacialAttributes", "Eye Openness Left: " + !attributeResults.eyeClosenessL);
-        Log.d("FacialAttributes", "Eye Openness Right: " + !attributeResults.eyeClosenessR);
-        Log.d("FacialAttributes", "Liveness: " + attributeResults.liveness);
-        Log.d("FacialAttributes", "Glasses: " + attributeResults.glasses);
-        Log.d("FacialAttributes", "Sunglasses: " + attributeResults.sunglasses);
-        Log.d("FacialAttributes", "Mask: " + attributeResults.mask);
-        // Check if results are displaying properly
-        Log.d("FaceDetectionResults", "Box Center (X, Y): " + " (" + faceDetectionResults.boxCenterX + ", " + faceDetectionResults.boxCenterY);
-        Log.d("FaceDetectionResults", "Box Width: " + faceDetectionResults.boxWidth);
-        Log.d("FaceDetectionResults", "Box Height: " + faceDetectionResults.boxHeight);
-        Log.d("FaceDetectionResults", "Right Eye (X, Y): " + " (" + faceDetectionResults.rightEyeX + ", " + faceDetectionResults.rightEyeY);
-        Log.d("FaceDetectionResults", "Left Eye (X, Y): " + " (" + faceDetectionResults.leftEyeX + ", " + faceDetectionResults.leftEyeY);
-        Log.d("FaceDetectionResults", "Nose Tip (X, Y): " + " (" + faceDetectionResults.noseTipX + ", " + faceDetectionResults.noseTipY);
-        Log.d("FaceDetectionResults", "Mouth Center (X, Y): " + " (" + faceDetectionResults.mouthCenterX + ", " + faceDetectionResults.mouthCenterY);
-        Log.d("FaceDetectionResults", "Right Ear (X, Y): " + " (" + faceDetectionResults.rightEarTragionX + ", " + faceDetectionResults.rightEarTragionY);
-        Log.d("FaceDetectionResults", "Left Ear (X, Y): " + " (" + faceDetectionResults.leftEarTragionX + ", " + faceDetectionResults.leftEarTragionY);
-        Log.d("FaceDetectionResults", "Face Detected: " + faceDetectionResults.faceDetected);
+//        // Check if the results are being passed correctly
+//        Log.d("FacialAttributes", "Eye Openness Left: " + !attributeResults.eyeClosenessL);
+//        Log.d("FacialAttributes", "Eye Openness Right: " + !attributeResults.eyeClosenessR);
+//        Log.d("FacialAttributes", "Liveness: " + attributeResults.liveness);
+//        Log.d("FacialAttributes", "Glasses: " + attributeResults.glasses);
+//        Log.d("FacialAttributes", "Sunglasses: " + attributeResults.sunglasses);
+//        Log.d("FacialAttributes", "Mask: " + attributeResults.mask);
+//        // Check if results are displaying properly
+//        Log.d("FaceDetectionResults", "Box Center (X, Y): " + " (" + faceDetectionResults.boxCenterX + ", " + faceDetectionResults.boxCenterY);
+//        Log.d("FaceDetectionResults", "Box Width: " + faceDetectionResults.boxWidth);
+//        Log.d("FaceDetectionResults", "Box Height: " + faceDetectionResults.boxHeight);
+//        Log.d("FaceDetectionResults", "Right Eye (X, Y): " + " (" + faceDetectionResults.rightEyeX + ", " + faceDetectionResults.rightEyeY);
+//        Log.d("FaceDetectionResults", "Left Eye (X, Y): " + " (" + faceDetectionResults.leftEyeX + ", " + faceDetectionResults.leftEyeY);
+//        Log.d("FaceDetectionResults", "Nose Tip (X, Y): " + " (" + faceDetectionResults.noseTipX + ", " + faceDetectionResults.noseTipY);
+//        Log.d("FaceDetectionResults", "Mouth Center (X, Y): " + " (" + faceDetectionResults.mouthCenterX + ", " + faceDetectionResults.mouthCenterY);
+//        Log.d("FaceDetectionResults", "Right Ear (X, Y): " + " (" + faceDetectionResults.rightEarTragionX + ", " + faceDetectionResults.rightEarTragionY);
+//        Log.d("FaceDetectionResults", "Left Ear (X, Y): " + " (" + faceDetectionResults.leftEarTragionX + ", " + faceDetectionResults.leftEarTragionY);
+//        Log.d("FaceDetectionResults", "Face Detected: " + faceDetectionResults.faceDetected);
+////
+////        // Display results for attributes
+////        TextView eyeOpennessText = findViewById(R.id.eyeOpennessText);
+////        TextView livenessText = findViewById(R.id.livenessText);
+////        TextView glassesText = findViewById(R.id.glassesText);
+////        TextView maskText = findViewById(R.id.maskText);
+////        TextView sunglassesText = findViewById(R.id.sunglassesText);
 //
-//        // Display results for attributes
-        TextView eyeOpennessText = findViewById(R.id.eyeOpennessText);
-        TextView livenessText = findViewById(R.id.livenessText);
-        TextView glassesText = findViewById(R.id.glassesText);
-        TextView maskText = findViewById(R.id.maskText);
-        TextView sunglassesText = findViewById(R.id.sunglassesText);
-
-        eyeOpennessText.setText("Eye Openness: Left: " + (!attributeResults.eyeClosenessL ? "True" : "False") + ", Right: " + (!attributeResults.eyeClosenessR ? "True" : "False"));
-        livenessText.setText("Liveness: " + (attributeResults.liveness ? "True" : "False"));
-        glassesText.setText("Glasses: " + (attributeResults.glasses ? "True" : "False"));
-        maskText.setText("Mask: " + (attributeResults.mask ? "True" : "False"));
-        sunglassesText.setText("Sunglasses: " + (attributeResults.sunglasses ? "True" : "False"));
-
-        // Display face detection results and key points
-        TextView faceDetectedText = findViewById(R.id.faceDetectedText);
-        TextView boxCenterText = findViewById(R.id.boxCenterText);
-        TextView boxWHText = findViewById(R.id.boxWHText);
-        TextView rightEyeText = findViewById(R.id.rightEyeText);
-        TextView leftEyeText = findViewById(R.id.leftEyeText);
-        TextView noseTipText = findViewById(R.id.noseTipText);
-        TextView mouthCenterText = findViewById(R.id.mouthCenterText);
-        TextView rightEarText = findViewById(R.id.rightEarText);
-        TextView leftEarText = findViewById(R.id.leftEarText);
-
-        faceDetectedText.setText("Face Detected: " + (faceDetectionResults.faceDetected ? "True" : "False"));
-        boxCenterText.setText("Box Center (X, Y): " + " (" + faceDetectionResults.boxCenterX + ", " + faceDetectionResults.boxCenterY);
-        boxWHText.setText("Box Width X Height: " + " (" + faceDetectionResults.boxWidth + ", " + faceDetectionResults.boxHeight);
-        rightEyeText.setText("Right Eye (X, Y): " + " (" + faceDetectionResults.rightEyeX + ", " + faceDetectionResults.rightEyeY);
-        leftEyeText.setText("Left Eye (X, Y): " + " (" + faceDetectionResults.leftEyeX + ", " + faceDetectionResults.leftEyeY);
-        noseTipText.setText("Nose Tip (X, Y): " + " (" + faceDetectionResults.noseTipX + ", " + faceDetectionResults.noseTipY);
-        mouthCenterText.setText("Mouth Center (X, Y): " + " (" + faceDetectionResults.mouthCenterX + ", " + faceDetectionResults.mouthCenterY);
-        rightEarText.setText("Right Ear (X, Y): " + " (" + faceDetectionResults.rightEarTragionX + ", " + faceDetectionResults.rightEarTragionY);
-        leftEarText.setText("Left Ear (X, Y): " + " (" + faceDetectionResults.leftEarTragionX + ", " + faceDetectionResults.leftEarTragionY);
+//        eyeOpennessText.setText("Eye Openness: Left: " + (!attributeResults.eyeClosenessL ? "True" : "False") + ", Right: " + (!attributeResults.eyeClosenessR ? "True" : "False"));
+//        livenessText.setText("Liveness: " + (attributeResults.liveness ? "True" : "False"));
+//        glassesText.setText("Glasses: " + (attributeResults.glasses ? "True" : "False"));
+//        maskText.setText("Mask: " + (attributeResults.mask ? "True" : "False"));
+//        sunglassesText.setText("Sunglasses: " + (attributeResults.sunglasses ? "True" : "False"));
+//
+////        // Display face detection results and key points
+////        TextView faceDetectedText = findViewById(R.id.faceDetectedText);
+////        TextView boxCenterText = findViewById(R.id.boxCenterText);
+////        TextView boxWHText = findViewById(R.id.boxWHText);
+////        TextView rightEyeText = findViewById(R.id.rightEyeText);
+////        TextView leftEyeText = findViewById(R.id.leftEyeText);
+////        TextView noseTipText = findViewById(R.id.noseTipText);
+////        TextView mouthCenterText = findViewById(R.id.mouthCenterText);
+////        TextView rightEarText = findViewById(R.id.rightEarText);
+////        TextView leftEarText = findViewById(R.id.leftEarText);
+//
+//        faceDetectedText.setText("Face Detected: " + (faceDetectionResults.faceDetected ? "True" : "False"));
+//        boxCenterText.setText("Box Center (X, Y): " + " (" + faceDetectionResults.boxCenterX + ", " + faceDetectionResults.boxCenterY);
+//        boxWHText.setText("Box Width X Height: " + " (" + faceDetectionResults.boxWidth + ", " + faceDetectionResults.boxHeight);
+//        rightEyeText.setText("Right Eye (X, Y): " + " (" + faceDetectionResults.rightEyeX + ", " + faceDetectionResults.rightEyeY);
+//        leftEyeText.setText("Left Eye (X, Y): " + " (" + faceDetectionResults.leftEyeX + ", " + faceDetectionResults.leftEyeY);
+//        noseTipText.setText("Nose Tip (X, Y): " + " (" + faceDetectionResults.noseTipX + ", " + faceDetectionResults.noseTipY);
+//        mouthCenterText.setText("Mouth Center (X, Y): " + " (" + faceDetectionResults.mouthCenterX + ", " + faceDetectionResults.mouthCenterY);
+//        rightEarText.setText("Right Ear (X, Y): " + " (" + faceDetectionResults.rightEarTragionX + ", " + faceDetectionResults.rightEarTragionY);
+//        leftEarText.setText("Left Ear (X, Y): " + " (" + faceDetectionResults.leftEarTragionX + ", " + faceDetectionResults.leftEarTragionY);
 
         TextView calibrationStatusText = findViewById(R.id.calibrationStatusText);
 
@@ -279,6 +378,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
     }
 
+    /*
+    **********************************************************************
+    Image conversion functions for rotating the bitmap, resizing,
+    yuv to RGB.
+     */
     private Bitmap rotateBitmap(Bitmap bitmap, int rotationDegrees) {
         if (rotationDegrees == 0) return bitmap; // No rotation needed
 
@@ -317,20 +421,6 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             Mat mRGB = getYUV2Mat(nv21, image);
 
             Bitmap bitmap = convertMatToBitMap(mRGB);
-
-
-            // old code
-//            ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-//            byte[] bytes = new byte[buffer.remaining()];
-//            buffer.get(bytes);
-//            // Convert YUV to RGB Bitmap
-//            YuvImage yuvImage = new YuvImage(bytes, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);
-//            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-//            yuvImage.compressToJpeg(new android.graphics.Rect(0, 0, image.getWidth(), image.getHeight()), 100, outputStream);
-//            byte[] jpegBytes = outputStream.toByteArray();
-
-            // Decode the byte array into a Bitmap
-//            Bitmap bitmap = BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.length);
 
             // Get rotation from ImageProxy metadata
             int rotationDegrees = imageProxy.getImageInfo().getRotationDegrees();
@@ -399,7 +489,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         can.drawBitmap(image, null, new RectF(left, top, finalWidth + left, finalHeight + top), null);
         return outputImage;
     }
-
+    //*********************************************************************
     @Override
     protected void onDestroy() {
         super.onDestroy();
