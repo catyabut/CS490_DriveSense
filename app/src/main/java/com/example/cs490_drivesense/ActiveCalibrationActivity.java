@@ -141,6 +141,9 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         exportButton = findViewById(R.id.exportButton);
         deviationWarningText = findViewById(R.id.deviationWarningText);
 
+        previewView.setVisibility(View.VISIBLE);
+        messageLayout.setVisibility(View.GONE);
+
         cameraToggleButton.setOnClickListener(view -> {
             if(!isCalibrationComplete) return; //Prevent toggling before calibration
 
@@ -218,7 +221,6 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                     {
                                         faceDetector.setNeutralPosition(faceDetectionResults);
                                         isCalibrationComplete = true;
-                                        runOnUiThread(this::showPostCalibrationLayout); //loading the new layout after success
 
                                     }
                                     // User moved too much do not set the neutral position
@@ -238,6 +240,23 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                 MediaPipeFaceDetectionData neutral = faceDetector.getNeutralPosition();
                                 boolean deviating = isDeviatingFromNeutral(faceDetectionResults,neutral);
 
+                                runOnUiThread(() -> {
+                                    showPostCalibrationLayout();
+                                    // Delay execution slightly to ensure layout is inflated
+                                    previewView.postDelayed(() -> {
+                                        deviationWarningText = findViewById(R.id.deviationWarningText);
+                                    }, 200); // delay in ms
+                                });
+
+                                cameraToggleButton.setOnClickListener(view -> {
+                                    if (!isCalibrationComplete) return;
+
+                                    isCameraOn = !isCameraOn;
+
+                                    previewView.setVisibility(isCameraOn ? View.VISIBLE : View.GONE);
+                                    messageLayout.setVisibility(isCameraOn ? View.GONE : View.VISIBLE);
+                                });
+
                                 if(deviating) {
                                     if(!isCurrentlyDeviating) {
                                         //First frame where deviation started
@@ -249,6 +268,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                             runOnUiThread(() -> {
                                                 //Show the warning text
                                                 if(deviationWarningText != null){
+                                                    deviationWarningText.setText("⚠️ Please return to neutral position");
+                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0)); // warm yellow/orange
                                                     deviationWarningText.setVisibility(View.VISIBLE);
                                                 }
 
