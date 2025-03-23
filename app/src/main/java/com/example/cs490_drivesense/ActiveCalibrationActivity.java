@@ -257,45 +257,58 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                 }
                             }
 
-                            if(isCalibrationComplete && isPostCalibLayoutRdy){
+                            if (isCalibrationComplete && isPostCalibLayoutRdy) {
                                 Log.d("DetectionLoop", "Calibration is complete and Layout is ready.");
+
+                                // Draw bounding box ONLY if camera interface is visible
+                                if (isCameraOn) {
+                                    runOnUiThread(() -> {
+                                        FaceOverlayView faceOverlay = findViewById(R.id.faceOverlay);
+                                        if (faceOverlay != null && faceDetectionResults.faceDetected) {
+                                            float scaleX = previewView.getWidth() / (float) bitmapMPFD.getWidth();
+                                            float scaleY = previewView.getHeight() / (float) bitmapMPFD.getHeight();
+
+                                            float left = (float) (faceDetectionResults.boxCenterX - faceDetectionResults.boxWidth / 2.0);
+                                            float top = (float) (faceDetectionResults.boxCenterY - faceDetectionResults.boxHeight / 2.0);
+                                            float right = (float) (left + faceDetectionResults.boxWidth);
+                                            float bottom = (float) (top + faceDetectionResults.boxHeight);
+
+                                            RectF box = new RectF(
+                                                    left * scaleX,
+                                                    top * scaleY,
+                                                    right * scaleX,
+                                                    bottom * scaleY
+                                            );
+
+                                            faceOverlay.updateBox(box);
+                                        }
+                                    });
+                                }
+
+                                // Deviation check logic
                                 MediaPipeFaceDetectionData neutral = faceDetector.getNeutralPosition();
                                 if (neutral == null) {
                                     Log.e("DeviationCheck", "Neutral position is null! Skipping deviation check.");
                                     return;
                                 }
+
                                 boolean deviating = isDeviatingFromNeutral(faceDetectionResults, neutral);
 
-
-                                cameraToggleButton.setOnClickListener(view -> {
-                                    if (!isCalibrationComplete) return;
-
-                                    isCameraOn = !isCameraOn;
-
-                                    previewView.setVisibility(isCameraOn ? View.VISIBLE : View.GONE);
-                                    messageLayout.setVisibility(isCameraOn ? View.GONE : View.VISIBLE);
-                                });
-
-                                if(deviating) {
+                                if (deviating) {
                                     Log.d("DetectionLoop", "In deviating if statement.");
-                                    if(!isCurrentlyDeviating) {
-                                        //First frame where deviation started
+                                    if (!isCurrentlyDeviating) {
                                         deviationStartTime = System.currentTimeMillis();
                                         isCurrentlyDeviating = true;
                                     } else {
-                                        Log.d("DetectionLoop", "User is deviating.");
                                         long elapsed = System.currentTimeMillis() - deviationStartTime;
-                                        if(elapsed >= DEVIATION_THRESHOLD_MS) {
+                                        if (elapsed >= DEVIATION_THRESHOLD_MS) {
                                             runOnUiThread(() -> {
-                                                //Show the warning text
-                                                if(deviationWarningText != null){
+                                                if (deviationWarningText != null) {
                                                     deviationWarningText.setText("⚠️ Please return to neutral position");
-                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0)); // warm yellow/orange
+                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0));
                                                     deviationWarningText.setVisibility(View.VISIBLE);
                                                 }
-
-                                                // Play sound here
-                                                if(mediaPlayer == null) {
+                                                if (mediaPlayer == null) {
                                                     mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
                                                     mediaPlayer.setLooping(true);
                                                     mediaPlayer.start();
@@ -304,19 +317,16 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                             Log.w("WARNING", "Driver has been looking away for more than 5 seconds!");
                                         }
                                     }
-                                }
-                                else {
+                                } else {
                                     runOnUiThread(() -> {
-                                        //Driver is not deviating, reset the state
                                         isCurrentlyDeviating = false;
                                         deviationStartTime = 0;
 
-                                        if(deviationWarningText != null) {
+                                        if (deviationWarningText != null) {
                                             deviationWarningText.setVisibility(View.GONE);
                                         }
 
-                                        //Stop and release the sound if playing
-                                        if(mediaPlayer != null && mediaPlayer.isPlaying()) {
+                                        if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                                             mediaPlayer.stop();
                                             mediaPlayer.release();
                                             mediaPlayer = null;

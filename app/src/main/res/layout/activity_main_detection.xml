@@ -11,6 +11,15 @@
         android:layout_height="match_parent"
         android:visibility="gone"/> <!-- Hidden initially -->
 
+    <!-- Face Bounding Box & Landmark Overlay -->
+    <com.example.cs490_drivesense.FaceOverlayView
+        android:id="@+id/faceOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:background="@android:color/transparent"
+        android:visibility="gone"/>
+
     <!-- Message Layout (Shown When Camera is Off) -->
     <LinearLayout
         android:id="@+id/messageLayout"
