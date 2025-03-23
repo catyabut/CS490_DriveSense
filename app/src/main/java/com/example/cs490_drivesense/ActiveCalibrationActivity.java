@@ -71,7 +71,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     //***************Calibration Private Variables***************
     private int counter = 0; // Used to ensure the first 5 results are collected before starting calibration
     private static final int CALIBRATION_FRAME_COUNT = 10; //To change the max frames needed for checking neutral position
-    private static final double MAX_DEVIATION_THRESHOLD = 0.5; // Used to tell if driver deviates from neutral
+    private static final double MAX_DEVIATION_THRESHOLD = 8.0; // Used to tell if driver deviates from neutral
     private long deviationStartTime = 0;
     private boolean isCurrentlyDeviating = false;
     private static final long DEVIATION_THRESHOLD_MS = 5000; //5 seconds
@@ -237,7 +237,12 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                             if(isCalibrationComplete && isPostCalibLayoutRdy){
                                 Log.d("DetectionLoop", "Calibration is complete and Layout is ready.");
                                 MediaPipeFaceDetectionData neutral = faceDetector.getNeutralPosition();
-                                boolean deviating = isDeviatingFromNeutral(faceDetectionResults,neutral);
+                                if (neutral == null) {
+                                    Log.e("DeviationCheck", "Neutral position is null! Skipping deviation check.");
+                                    return;
+                                }
+                                boolean deviating = isDeviatingFromNeutral(faceDetectionResults, neutral);
+
 
                                 cameraToggleButton.setOnClickListener(view -> {
                                     if (!isCalibrationComplete) return;
@@ -612,6 +617,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
     public boolean isDeviatingFromNeutral(MediaPipeFaceDetectionData results, MediaPipeFaceDetectionData neutral)
     {
+        if (results == null || neutral == null) {
+            Log.e("isDeviatingFromNeutral", "results or neutral is null");
+            return false;
+        }
+
         SessionTimer sTimer = new SessionTimer();
         boolean deviating = false;
         double neutralDistBetLeftEyeLeftEar = Math.abs(distBetweenPoints(neutral.leftEyeX, neutral.leftEyeY, neutral.leftEarTragionX, neutral.leftEarTragionY));
