@@ -217,11 +217,15 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                 {
                                     boolean userStill = this.checkIfUserStill(faceDetector.lastXResults);
                                     // Calibration successful set the neutral position
-                                    if (userStill)
+                                    if (userStill && !isCalibrationComplete)
                                     {
                                         faceDetector.setNeutralPosition(faceDetectionResults);
                                         isCalibrationComplete = true;
 
+                                        runOnUiThread(() -> {
+                                            showPostCalibrationLayout();
+                                            deviationWarningText = findViewById(R.id.deviationWarningText);
+                                        });
                                     }
                                     // User moved too much do not set the neutral position
                                     else
@@ -239,14 +243,6 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                             if(isCalibrationComplete && isPostCalibLayoutRdy){
                                 MediaPipeFaceDetectionData neutral = faceDetector.getNeutralPosition();
                                 boolean deviating = isDeviatingFromNeutral(faceDetectionResults,neutral);
-
-                                runOnUiThread(() -> {
-                                    showPostCalibrationLayout();
-                                    // Delay execution slightly to ensure layout is inflated
-                                    previewView.postDelayed(() -> {
-                                        deviationWarningText = findViewById(R.id.deviationWarningText);
-                                    }, 200); // delay in ms
-                                });
 
                                 cameraToggleButton.setOnClickListener(view -> {
                                     if (!isCalibrationComplete) return;
