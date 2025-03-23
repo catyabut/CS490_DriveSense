@@ -283,21 +283,23 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                     }
                                 }
                                 else {
-                                    //Driver is not deviating, reset the state
-                                    isCurrentlyDeviating = false;
-                                    deviationStartTime = 0;
-                                    if(deviationWarningText != null) {
-                                        deviationWarningText.setVisibility(View.GONE);
-                                    }
+                                    runOnUiThread(() -> {
+                                        //Driver is not deviating, reset the state
+                                        isCurrentlyDeviating = false;
+                                        deviationStartTime = 0;
 
-                                    //Stop and release the sound if playing
-                                    if(mediaPlayer != null && mediaPlayer.isPlaying()) {
-                                        mediaPlayer.stop();
-                                        mediaPlayer.release();
-                                        mediaPlayer = null;
-                                    }
+                                        if(deviationWarningText != null) {
+                                            deviationWarningText.setVisibility(View.GONE);
+                                        }
+
+                                        //Stop and release the sound if playing
+                                        if(mediaPlayer != null && mediaPlayer.isPlaying()) {
+                                            mediaPlayer.stop();
+                                            mediaPlayer.release();
+                                            mediaPlayer = null;
+                                        }
+                                    });
                                 }
-
                             }
 
                             // Debug logs to check if MediaPipe is detecting faces
