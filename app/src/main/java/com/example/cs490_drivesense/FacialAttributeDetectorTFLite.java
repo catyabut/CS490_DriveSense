@@ -32,8 +32,11 @@ public class FacialAttributeDetectorTFLite {
     private static final double SUNGLASSES_MIN_THRESHOLD = 0.80;
     private static final double MASK_MIN_THRESHOLD = 0.80;
     private static final double LIVENESS_MAX_THRESHOLD = 10;
+    private static final int MAX_DETECTION_DATA = 5; //max number of previous facial attribute data
+
 
     private Map<Integer, Object> rawOutputs;
+    public FacialAttributeData[] lastXResults = new FacialAttributeData[MAX_DETECTION_DATA];
     private FloatBuffer originalLivenessEmbedding;
     private FloatBuffer currentLivenessEmbedding;
     public double probEyeClosenessL;
@@ -93,6 +96,15 @@ public class FacialAttributeDetectorTFLite {
 
         // Return outputs as booleans
         FacialAttributeData processedData = new FacialAttributeData(this.eyeClosenessL, this.eyeClosenessR, this.sunglasses, this.liveness, this.glasses, this.mask);
+
+        // Shift the results (move older detections down)
+        for (int i = lastXResults.length - 1; i > 0; i--) {
+            lastXResults[i] = lastXResults[i - 1];
+        }
+
+        // Store the latest detection
+        lastXResults[0] = processedData;
+
         return processedData;
     }
 

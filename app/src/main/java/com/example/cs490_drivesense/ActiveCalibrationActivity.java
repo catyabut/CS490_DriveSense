@@ -73,8 +73,17 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private static final int CALIBRATION_FRAME_COUNT = 10; //To change the max frames needed for checking neutral position
     private static final double MAX_DEVIATION_THRESHOLD = 8.0; // Used to tell if driver deviates from neutral
     private long deviationStartTime = 0;
-    private boolean isCurrentlyDeviating = false;
+    private long eyeClosenessStartTime = 0;
+    private long livenessStartTime = 0;
+    private boolean isCurrentlyDeviating = false;   // deviation from neutral used in active session
+    private boolean isCurrentlyClosingEyes = false; // eyecloseness check used in active session
+    private boolean isCurrentlyNotLive = false;     // liveness check used in active session
     private static final long DEVIATION_THRESHOLD_MS = 5000; //5 seconds
+    private static final long EYECLOSENESS_THRESHOLD_MS = 2000; // 2 seconds
+    private static final long LIVENESS_THRESHOLD_MS = 2000; // 2 seconds
+    private static boolean wearingMask = false; // Set during calibration, for use in active session to check the mask
+    private static boolean wearingSunglasses = false; // Set during calibration, if true user should be told to take sunglasses off
+    private static final double MIN_ATTRIBUTE_THRESHOLD = 0.8; // 80% of attribute detections should be true when checking last X results
 
     private MediaPlayer mediaPlayer;
     private LinearLayout resultsLayout; //Declare resultsLayout
@@ -214,12 +223,14 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                             else
                             {
                                 boolean faceDetectedAllResults = this.faceDetectedXTimes(faceDetector.lastXResults); // Check last X positions for extreme movement
+                                wearingSunglasses = this.sunglassesDetectedXTimes(facialAttributeDetector.lastXResults); // Check last X results for sunglasses
+                                wearingMask = this.maskDetectedXTimes(facialAttributeDetector.lastXResults); // Check last X results for mask
                                 // Check if user moved
                                 if (faceDetectedAllResults)
                                 {
                                     boolean userStill = this.checkIfUserStill(faceDetector.lastXResults);
                                     // Calibration successful set the neutral position
-                                    if (userStill && !isCalibrationComplete)
+                                    if (userStill && !isCalibrationComplete && !wearingSunglasses)
                                     {
                                         faceDetector.setNeutralPosition(faceDetectionResults);
                                         isCalibrationComplete = true;
@@ -230,6 +241,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                     else
                                     {
                                         Log.d("Calibration", "ERROR: User needs to stay still.");
+                                        if (wearingSunglasses)
+                                        {
+                                            // Tell user to take sunglasses off
+                                            Log.d("Calibration", "ERROR: User needs to take off sunglasses.");
+                                        }
                                     }
                                 }
                                 // Face was not detected enough times to check movement
@@ -249,8 +265,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                     return;
                                 }
 
-                                boolean deviating = isDeviatingFromNeutral(faceDetectionResults, neutral);
+                                boolean deviating = isDeviatingFromNeutral(faceDetectionResults, neutral); // check if driver deviates from neutral
+                                boolean eyeClosenessLastXResults = eyeClosenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if eyeCloseness is above the threshold for last X results (default is 80%)
+                                boolean livenessLastXResults = livenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if liveness is above the threshold for last X results
 
+                                // First check is deviation from neutral
                                 if (deviating) {
                                     Log.d("DetectionLoop", "In deviating if statement.");
                                     if (!isCurrentlyDeviating) {
@@ -261,7 +280,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                         if (elapsed >= DEVIATION_THRESHOLD_MS) {
                                             runOnUiThread(() -> {
                                                 if (deviationWarningText != null) {
-                                                    deviationWarningText.setText("⚠️ Please return to neutral position");
+                                                    deviationWarningText.setText("⚠️ Please return to neutral position!");
                                                     deviationWarningText.setTextColor(Color.rgb(255, 191, 0));
                                                     deviationWarningText.setVisibility(View.VISIBLE);
                                                 }
@@ -274,9 +293,65 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                             Log.w("WARNING", "Driver has been looking away for more than 5 seconds!");
                                         }
                                     }
-                                } else {
+                                }
+                                // Then check eyeCloseness
+                                else if (eyeClosenessLastXResults)
+                                {
+                                    Log.d("DetectionLoop", "In eyecloseness if statement.");
+                                    if (!isCurrentlyClosingEyes) {
+                                        eyeClosenessStartTime = System.currentTimeMillis();
+                                        isCurrentlyClosingEyes = true;
+                                    } else {
+                                        long elapsed = System.currentTimeMillis() - eyeClosenessStartTime;
+                                        if (elapsed >= EYECLOSENESS_THRESHOLD_MS) {
+                                            runOnUiThread(() -> {
+                                                if (deviationWarningText != null) {
+                                                    deviationWarningText.setText("⚠️ Please open your eyes!");
+                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0));
+                                                    deviationWarningText.setVisibility(View.VISIBLE);
+                                                }
+                                                if (mediaPlayer == null) {
+                                                    mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
+                                                    mediaPlayer.setLooping(true);
+                                                    mediaPlayer.start();
+                                                }
+                                            });
+                                            Log.w("WARNING", "Driver has been closing eyes more than 2 seconds!");
+                                        }
+                                    }
+                                }
+                                // Lastly check liveness
+                                else if (livenessLastXResults)
+                                {
+                                    Log.d("DetectionLoop", "In liveness if statement.");
+                                    if (!isCurrentlyNotLive) {
+                                        livenessStartTime = System.currentTimeMillis();
+                                        isCurrentlyNotLive = true;
+                                    } else {
+                                        long elapsed = System.currentTimeMillis() - livenessStartTime;
+                                        if (elapsed >= LIVENESS_THRESHOLD_MS) {
+                                            runOnUiThread(() -> {
+                                                if (deviationWarningText != null) {
+                                                    deviationWarningText.setText("⚠️ Liveness not detected!");
+                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0));
+                                                    deviationWarningText.setVisibility(View.VISIBLE);
+                                                }
+                                                if (mediaPlayer == null) {
+                                                    mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
+                                                    mediaPlayer.setLooping(true);
+                                                    mediaPlayer.start();
+                                                }
+                                            });
+                                            Log.w("WARNING", "Driver does not have liveness for more than 2 seconds!");
+                                        }
+                                    }
+                                }
+                                // If driver passes every check reset the chime and hide warning text
+                                else {
                                     runOnUiThread(() -> {
                                         isCurrentlyDeviating = false;
+                                        isCurrentlyClosingEyes = false;
+                                        isCurrentlyNotLive = false;
                                         deviationStartTime = 0;
 
                                         if (deviationWarningText != null) {
@@ -390,6 +465,9 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             calibrationStatusText.setTextColor(Color.RED);
         } else if (!checkIfUserStill(faceDetector.lastXResults)) {
             calibrationStatusText.setText("Error: Please stay still.");
+            calibrationStatusText.setTextColor(Color.RED);
+        } else if (sunglassesDetectedXTimes(facialAttributeDetector.lastXResults)) {
+            calibrationStatusText.setText("Error: Please remove your sunglasses.");
             calibrationStatusText.setTextColor(Color.RED);
         } else {
             calibrationStatusText.setText("Calibration Successful!");
@@ -550,6 +628,143 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         }
         return true;
     }
+
+    // Function to check if sunglasses were detected the last X results returns boolean for use in active session
+    public boolean sunglassesDetectedXTimes(FacialAttributeData[] history)
+    {
+        int positives = 0; // Used to get ratio of positive detections
+        int total = history.length;
+
+        // History should not be empty
+        if (history == null) {
+            Log.e("Calibration", "sunglassesDetectedXTimes: history array is null!");
+            return false;
+        }
+
+        // For each recorded result
+        for (int i = 0; i < history.length; i++) {
+            // Result is true count it
+            if (history[i].sunglasses)
+            {
+                positives += 1;
+            }
+        }
+
+        double ratio = positives / total; // ratio of true detections over lastXResults
+
+        // If true detections exceed the threshold
+        if (ratio > MIN_ATTRIBUTE_THRESHOLD)
+        {
+            return true; // Sunglasses detected
+        }
+        else
+        {
+            return false; // Sunglasses not detected
+        }
+    }
+
+    // Function to check if mask was detected the last X results returns boolean for use in active session
+    public boolean maskDetectedXTimes(FacialAttributeData[] history)
+    {
+        int positives = 0; // Used to get ratio of positive detections
+        int total = history.length;
+
+        // History should not be empty
+        if (history == null) {
+            Log.e("Calibration", "maskDetectedXTimes: history array is null!");
+            return false;
+        }
+
+        // For each recorded result
+        for (int i = 0; i < history.length; i++) {
+            // Result is true count it
+            if (history[i].mask)
+            {
+                positives += 1;
+            }
+        }
+
+        double ratio = positives / total; // ratio of true detections over lastXResults
+
+        // If true detections exceed the threshold
+        if (ratio > MIN_ATTRIBUTE_THRESHOLD)
+        {
+            return true; // Mask detected
+        }
+        else
+        {
+            return false; // Mask not detected
+        }
+    }
+
+    // Function to check if eye closeness was detected the last X results returns boolean for use in active session
+    public boolean eyeClosenessDetectedXTimes(FacialAttributeData[] history)
+    {
+        int positives = 0; // Used to get ratio of positive detections
+        int total = history.length;
+
+        // History should not be empty
+        if (history == null) {
+            Log.e("Calibration", "eyeClosenessDetectedXTimes: history array is null!");
+            return false;
+        }
+
+        // For each recorded result
+        for (int i = 0; i < history.length; i++) {
+            // Either Result is true count it
+            if (history[i].eyeClosenessL || history[i].eyeClosenessR)
+            {
+                positives += 1;
+            }
+        }
+
+        double ratio = positives / total; // ratio of true detections over lastXResults
+
+        // If true detections exceed the threshold
+        if (ratio > MIN_ATTRIBUTE_THRESHOLD)
+        {
+            return true; // Eyecloseness detected
+        }
+        else
+        {
+            return false; // Eyecloseness not detected
+        }
+    }
+
+    // Function to check if liveness was detected the last X results returns boolean for use in active session
+    public boolean livenessDetectedXTimes(FacialAttributeData[] history)
+    {
+        int positives = 0; // Used to get ratio of positive detections
+        int total = history.length;
+
+        // History should not be empty
+        if (history == null) {
+            Log.e("Calibration", "livenesssDetectedXTimes: history array is null!");
+            return false;
+        }
+
+        // For each recorded result
+        for (int i = 0; i < history.length; i++) {
+            // Result is true count it
+            if (history[i].liveness)
+            {
+                positives += 1;
+            }
+        }
+
+        double ratio = positives / total; // ratio of true detections over lastXResults
+
+        // If true detections exceed the threshold
+        if (ratio > MIN_ATTRIBUTE_THRESHOLD)
+        {
+            return true; // Liveness detected
+        }
+        else
+        {
+            return false; // Liveness not detected
+        }
+    }
+
     // Function that checks the last 5 results from mediapipe face detection model to ensure that the user doesn't move too much returns a bool
     public boolean checkIfUserStill(MediaPipeFaceDetectionData[] history)
     {
