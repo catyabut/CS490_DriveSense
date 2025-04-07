@@ -88,13 +88,6 @@
             android:layout_height="match_parent"/>
 
         <!-- Export Button -->
-        <ImageButton
-            android:id="@+id/exportButton"
-            android:layout_width="64dp"
-            android:layout_height="64dp"
-            android:src="@drawable/ic_export"
-            android:background="@android:color/transparent"
-            android:contentDescription="Export Data"/>
     </LinearLayout>
 
 </RelativeLayout>
