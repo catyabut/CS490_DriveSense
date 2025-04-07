@@ -70,7 +70,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
     //***************Calibration Private Variables***************
     private int counter = 0; // Used to ensure the first 5 results are collected before starting calibration
-    private static final int CALIBRATION_FRAME_COUNT = 10; //To change the max frames needed for checking neutral position
+    private static final int CALIBRATION_FRAME_COUNT = 20; //To change the max frames needed for checking neutral position
     private static final double MAX_DEVIATION_THRESHOLD = 8.0; // Used to tell if driver deviates from neutral
     private long deviationStartTime = 0;
     private long eyeClosenessStartTime = 0;
@@ -194,6 +194,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                         .setTargetResolution(new android.util.Size(INPUT_SIZE, INPUT_SIZE))
                         .build();
 
+
+
                 // Set the analyzer for real-time frame processing
                 imageAnalysis.setAnalyzer(cameraExecutor, image -> {
                     long currentTime = System.currentTimeMillis();
@@ -266,8 +268,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                 }
 
                                 boolean deviating = isDeviatingFromNeutral(faceDetectionResults, neutral); // check if driver deviates from neutral
-                                boolean eyeClosenessLastXResults = eyeClosenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if eyeCloseness is above the threshold for last X results (default is 80%)
-                                boolean livenessLastXResults = livenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if liveness is above the threshold for last X results
+                                //boolean eyeClosenessLastXResults = eyeClosenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if eyeCloseness is above the threshold for last X results (default is 80%)
+                                //boolean livenessLastXResults = livenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if liveness is above the threshold for last X results
 
                                 // First check is deviation from neutral
                                 if (deviating) {
@@ -294,58 +296,58 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                         }
                                     }
                                 }
-                                // Then check eyeCloseness
-                                else if (eyeClosenessLastXResults)
-                                {
-                                    Log.d("DetectionLoop", "In eyecloseness if statement.");
-                                    if (!isCurrentlyClosingEyes) {
-                                        eyeClosenessStartTime = System.currentTimeMillis();
-                                        isCurrentlyClosingEyes = true;
-                                    } else {
-                                        long elapsed = System.currentTimeMillis() - eyeClosenessStartTime;
-                                        if (elapsed >= EYECLOSENESS_THRESHOLD_MS) {
-                                            runOnUiThread(() -> {
-                                                if (deviationWarningText != null) {
-                                                    deviationWarningText.setText("⚠️ Please open your eyes!");
-                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0));
-                                                    deviationWarningText.setVisibility(View.VISIBLE);
-                                                }
-                                                if (mediaPlayer == null) {
-                                                    mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
-                                                    mediaPlayer.setLooping(true);
-                                                    mediaPlayer.start();
-                                                }
-                                            });
-                                            Log.w("WARNING", "Driver has been closing eyes more than 2 seconds!");
-                                        }
-                                    }
-                                }
-                                // Lastly check liveness
-                                else if (livenessLastXResults)
-                                {
-                                    Log.d("DetectionLoop", "In liveness if statement.");
-                                    if (!isCurrentlyNotLive) {
-                                        livenessStartTime = System.currentTimeMillis();
-                                        isCurrentlyNotLive = true;
-                                    } else {
-                                        long elapsed = System.currentTimeMillis() - livenessStartTime;
-                                        if (elapsed >= LIVENESS_THRESHOLD_MS) {
-                                            runOnUiThread(() -> {
-                                                if (deviationWarningText != null) {
-                                                    deviationWarningText.setText("⚠️ Liveness not detected!");
-                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0));
-                                                    deviationWarningText.setVisibility(View.VISIBLE);
-                                                }
-                                                if (mediaPlayer == null) {
-                                                    mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
-                                                    mediaPlayer.setLooping(true);
-                                                    mediaPlayer.start();
-                                                }
-                                            });
-                                            Log.w("WARNING", "Driver does not have liveness for more than 2 seconds!");
-                                        }
-                                    }
-                                }
+//                                // Then check eyeCloseness
+//                                else if (eyeClosenessLastXResults)
+//                                {
+//                                    Log.d("DetectionLoop", "In eyecloseness if statement.");
+//                                    if (!isCurrentlyClosingEyes) {
+//                                        eyeClosenessStartTime = System.currentTimeMillis();
+//                                        isCurrentlyClosingEyes = true;
+//                                    } else {
+//                                        long elapsed = System.currentTimeMillis() - eyeClosenessStartTime;
+//                                        if (elapsed >= EYECLOSENESS_THRESHOLD_MS) {
+//                                            runOnUiThread(() -> {
+//                                                if (deviationWarningText != null) {
+//                                                    deviationWarningText.setText("⚠️ Please open your eyes!");
+//                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0));
+//                                                    deviationWarningText.setVisibility(View.VISIBLE);
+//                                                }
+//                                                if (mediaPlayer == null) {
+//                                                    mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
+//                                                    mediaPlayer.setLooping(true);
+//                                                    mediaPlayer.start();
+//                                                }
+//                                            });
+//                                            Log.w("WARNING", "Driver has been closing eyes more than 2 seconds!");
+//                                        }
+//                                    }
+//                                }
+//                                // Lastly check liveness
+//                                else if (livenessLastXResults)
+//                                {
+//                                    Log.d("DetectionLoop", "In liveness if statement.");
+//                                    if (!isCurrentlyNotLive) {
+//                                        livenessStartTime = System.currentTimeMillis();
+//                                        isCurrentlyNotLive = true;
+//                                    } else {
+//                                        long elapsed = System.currentTimeMillis() - livenessStartTime;
+//                                        if (elapsed >= LIVENESS_THRESHOLD_MS) {
+//                                            runOnUiThread(() -> {
+//                                                if (deviationWarningText != null) {
+//                                                    deviationWarningText.setText("⚠️ Liveness not detected!");
+//                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0));
+//                                                    deviationWarningText.setVisibility(View.VISIBLE);
+//                                                }
+//                                                if (mediaPlayer == null) {
+//                                                    mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
+//                                                    mediaPlayer.setLooping(true);
+//                                                    mediaPlayer.start();
+//                                                }
+//                                            });
+//                                            Log.w("WARNING", "Driver does not have liveness for more than 2 seconds!");
+//                                        }
+//                                    }
+//                                }
                                 // If driver passes every check reset the chime and hide warning text
                                 else {
                                     runOnUiThread(() -> {
