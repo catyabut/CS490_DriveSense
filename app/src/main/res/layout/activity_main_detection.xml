@@ -5,6 +5,7 @@
     android:background="@color/white">
 
     <!-- Camera Preview (Initially Hidden) -->
+
     <androidx.camera.view.PreviewView
         android:id="@+id/previewViewAC"
         android:layout_width="match_parent"
@@ -21,48 +22,50 @@
         android:visibility="gone"/>
 
     <!-- Message Layout (Shown When Camera is Off) -->
+
+    <!-- Bottom Button Container -->
+
     <LinearLayout
         android:id="@+id/messageLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
         android:gravity="center"
+        android:orientation="vertical"
         android:visibility="visible">
 
         <TextView
             android:id="@+id/cameraStatusText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
             android:text="Camera is running in background"
             android:textColor="@android:color/black"
-            android:textSize="14sp"
-            android:layout_marginBottom="20dp"/>
+            android:textSize="14sp" />
 
         <TextView
             android:id="@+id/safetyMessage"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:gravity="center"
             android:text="Your safety is our priority\n\nPlease have a safe drive!"
             android:textColor="@android:color/black"
             android:textSize="22sp"
-            android:textStyle="bold"
-            android:gravity="center"/>
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/deviationWarningText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
             android:text="Warning: Please return to neutral position."
             android:textColor="#FFB300"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:gravity="center"
-            android:visibility="gone"
-            android:layout_marginTop="16dp" />
+            android:visibility="gone" />
 
     </LinearLayout>
 
-    <!-- Bottom Button Container -->
     <LinearLayout
         android:id="@+id/buttonLayout"
         android:layout_width="match_parent"
@@ -83,11 +86,22 @@
             android:contentDescription="Toggle Camera"/>
 
         <!-- Spacer between buttons -->
-        <View
-            android:layout_width="32dp"
-            android:layout_height="match_parent"/>
 
-        <!-- Export Button -->
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <!-- Done Button -->
+        <Button
+            android:id="@+id/DoneButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:orientation="horizontal"
+            android:text="Done"/>
     </LinearLayout>
 
 </RelativeLayout>

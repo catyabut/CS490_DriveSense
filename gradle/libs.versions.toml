@@ -1,5 +1,5 @@
 [versions]
-agp = "8.6.0"
+agp = "8.9.0"
 cameraCamera2 = "1.0.0"
 cameraLifecycleVersion = "1.0.0"
 cameraViewVersion = "1.0.0"
@@ -15,6 +15,7 @@ cameraLifecycle = "1.4.1"
 cameraView = "1.4.1"
 litert = "1.1.2"
 litertSupportApi = "1.1.2"
+opencv = "4.11.0"
 renderscriptIntrinsicsReplacementToolkit = "b6363490c3"
 tensorflowCorePlatform = "0.3.3"
 tensorflowCorePlatformVersion = "0.5.0"
@@ -37,6 +38,7 @@ camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", versi
 camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "cameraView" }
 litert = { group = "com.google.ai.edge.litert", name = "litert", version.ref = "litert" }
 litert-support-api = { group = "com.google.ai.edge.litert", name = "litert-support-api", version.ref = "litertSupportApi" }
+opencv = {module = "org.opencv:opencv", version.ref = "opencv"}
 renderscript-intrinsics-replacement-toolkit = { module = "com.github.android:renderscript-intrinsics-replacement-toolkit", version.ref = "renderscriptIntrinsicsReplacementToolkit" }
 tensorflow-core-platform = { module = "org.tensorflow:tensorflow-core-platform", version.ref = "tensorflowCorePlatform" }
 tensorflow-core-platform-v050 = { module = "org.tensorflow:tensorflow-core-platform", version.ref = "tensorflowCorePlatformVersion" }
