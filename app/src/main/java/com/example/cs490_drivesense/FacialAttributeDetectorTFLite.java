@@ -27,7 +27,7 @@ public class FacialAttributeDetectorTFLite {
     private static final int INPUT_SIZE = 128; // Adjust to your model input size
     private static final int NUM_CHANNELS = 3; // RGB
     private static final int OUTPUT_SIZE = 6; // Adjust based on model output
-    private static final double EYE_CLOSENESS_MIN_THRESHOLD = 0.80;
+    private static final double EYE_OPENNESS_MIN_THRESHOLD = 0.50;
     private static final double GLASSES_MIN_THRESHOLD = 0.80;
     private static final double SUNGLASSES_MIN_THRESHOLD = 0.80;
     private static final double MASK_MIN_THRESHOLD = 0.80;
@@ -39,13 +39,11 @@ public class FacialAttributeDetectorTFLite {
     public FacialAttributeData[] lastXResults = new FacialAttributeData[MAX_DETECTION_DATA];
     private FloatBuffer originalLivenessEmbedding;
     private FloatBuffer currentLivenessEmbedding;
-    public double probEyeClosenessL;
-    public double probEyeClosenessR;
+    public double probEyeOpenness;
     public double probSunglasses;
     public double probGlasses;
     public double probMask;
-    public boolean eyeClosenessL;
-    public boolean eyeClosenessR;
+    public boolean eyeOpenness;
     public boolean sunglasses;
     public double livenessLoss;
     public boolean liveness;
@@ -89,13 +87,13 @@ public class FacialAttributeDetectorTFLite {
 
         // Compute probabilities and booleans using raw outputs
         computeLiveness();
-        computeEyeCloseness();
+        computeEyeOpenness();
         computeGlasses();
         computeMask();
         computeSunglasses();
 
         // Return outputs as booleans
-        FacialAttributeData processedData = new FacialAttributeData(this.eyeClosenessL, this.eyeClosenessR, this.sunglasses, this.liveness, this.glasses, this.mask);
+        FacialAttributeData processedData = new FacialAttributeData(this.eyeOpenness, this.sunglasses, this.liveness, this.glasses, this.mask);
 
         // Shift the results (move older detections down)
         for (int i = lastXResults.length - 1; i > 0; i--) {
@@ -229,11 +227,11 @@ public class FacialAttributeDetectorTFLite {
         this.computeLivenessBoolean();
     }
 
-    // Compute eyeCloseness using softmax
-    public void computeEyeCloseness()
+    // Compute eyeOpennes using softmax
+    public void computeEyeOpenness()
     {
-        this.computeEyeClosenessProbLR();
-        this.computeEyeClosenessBoolean();
+        this.computeEyeOpennessProb();
+        this.computeEyeOpennessBoolean();
     }
 
     // Compute glasses using softmax
@@ -257,16 +255,15 @@ public class FacialAttributeDetectorTFLite {
         this.computeSunglassesBoolean();
     }
 
-    // Compute eyeCloseness probability and boolean for left and right eyes
-    private void computeEyeClosenessProbLR()
+    // Compute eyeOpenness probability and boolean for left and right eyes
+    private void computeEyeOpennessProb()
     {
         Object eyeClosenessResults = this.rawOutputs.get(2);
         //Class<?> classtype = eyeClosenessResults.getClass();
         FloatBuffer buffer = (FloatBuffer) eyeClosenessResults;
-        double leftEyeClosenessProbability = softmax(buffer.get(0), buffer);
-        double rightEyeClosenessProbability = softmax(buffer.get(1), buffer);
-        this.probEyeClosenessL = leftEyeClosenessProbability;
-        this.probEyeClosenessR = rightEyeClosenessProbability;
+        double eyeOpennesProbability = softmax(buffer.get(0), buffer);
+        double eyeClosenessProbability = softmax(buffer.get(1), buffer);
+        this.probEyeOpenness = eyeOpennesProbability;
     }
 
     // Compute glasses probabilities
@@ -302,24 +299,17 @@ public class FacialAttributeDetectorTFLite {
         this.livenessLoss = loss;
     }
 
-    // Compute eyecloseness booleans
-    private void computeEyeClosenessBoolean()
+    // Compute eyeopenness boolean
+    private void computeEyeOpennessBoolean()
     {
-        if (this.probEyeClosenessL > EYE_CLOSENESS_MIN_THRESHOLD)
+        Log.d("ComputeEyeOpenness", "Prob = " + Double.toString(this.probEyeOpenness));
+        if (this.probEyeOpenness > EYE_OPENNESS_MIN_THRESHOLD)
         {
-            this.eyeClosenessL = true;
+            this.eyeOpenness = true;
         }
         else
         {
-            this.eyeClosenessL = false;
-        }
-        if (this.probEyeClosenessR > EYE_CLOSENESS_MIN_THRESHOLD)
-        {
-            this.eyeClosenessR = true;
-        }
-        else
-        {
-            this.eyeClosenessR = false;
+            this.eyeOpenness = false;
         }
     }
 

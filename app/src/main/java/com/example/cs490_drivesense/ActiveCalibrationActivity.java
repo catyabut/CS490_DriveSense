@@ -219,6 +219,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
                         if (bitmapFA != null && bitmapMPFD != null) {
                             // Run inference on both models with the rotated, resized Bitmap
+                            Log.d("Running models", "Getting model results");
                             FacialAttributeData faceAttributeResults = facialAttributeDetector.detectFacialAttributes(bitmapFA);
                             MediaPipeFaceDetectionData faceDetectionResults = faceDetector.detectFace(bitmapMPFD);
 
@@ -236,7 +237,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                             else
                             {
                                 boolean faceDetectedAllResults = this.faceDetectedXTimes(faceDetector.lastXResults); // Check last X positions for extreme movement
-                                wearingSunglasses = this.sunglassesDetectedXTimes(facialAttributeDetector.lastXResults); // Check last X results for sunglasses
+                                //wearingSunglasses = this.sunglassesDetectedXTimes(facialAttributeDetector.lastXResults); // Check last X results for sunglasses
+                                wearingSunglasses = false; // Force sunglasses false for now detection not working correctly
                                 wearingMask = this.maskDetectedXTimes(facialAttributeDetector.lastXResults); // Check last X results for mask
                                 // Check if user moved
                                 if (faceDetectedAllResults)
@@ -479,10 +481,13 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         } else if (!checkIfUserStill(faceDetector.lastXResults)) {
             calibrationStatusText.setText("Error: Please stay still.");
             calibrationStatusText.setTextColor(Color.RED);
-        } else if (sunglassesDetectedXTimes(facialAttributeDetector.lastXResults)) {
-            calibrationStatusText.setText("Error: Please remove your sunglasses.");
-            calibrationStatusText.setTextColor(Color.RED);
-        } else {
+        }
+        // Sunglasses detection not working correctly
+//        else if (sunglassesDetectedXTimes(facialAttributeDetector.lastXResults)) {
+//            calibrationStatusText.setText("Error: Please remove your sunglasses.");
+//            calibrationStatusText.setTextColor(Color.RED);
+//        }
+        else {
             calibrationStatusText.setText("Calibration Successful!");
             calibrationStatusText.setTextColor(Color.GREEN);
         }
@@ -726,9 +731,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         // For each recorded result
         for (int i = 0; i < history.length; i++) {
             // Either Result is true count it
-            Log.e("Eyecloseness detection", "eyeClosenessL = " + Boolean.toString(history[i].eyeClosenessL));
-            Log.e("Eyecloseness detection", "eyeClosenessR = " + Boolean.toString(history[i].eyeClosenessR));
-            if (history[i].eyeClosenessL || history[i].eyeClosenessR)
+            Log.e("Eyecloseness detection", "eyeOpenness = " + Boolean.toString(history[i].eyeOpenness));
+            if (!history[i].eyeOpenness) // if the eyes are closed
             {
                 Log.e("Eyecloseness detection", "Counted as positive");
                 positives += 1;
