@@ -1,0 +1,163 @@
+Index: .idea/shelf/Uncommitted_changes_before_Update_at_3_15_2025_5_04_PM_[Changes]/shelved.patch
+===================================================================
+diff --git a/.idea/shelf/Uncommitted_changes_before_Update_at_3_15_2025_5_04_PM_[Changes]/shelved.patch b/.idea/shelf/Uncommitted_changes_before_Update_at_3_15_2025_5_04_PM_[Changes]/shelved.patch
+deleted file mode 100644
+--- a/.idea/shelf/Uncommitted_changes_before_Update_at_3_15_2025_5_04_PM_[Changes]/shelved.patch	(revision 274e4d7fc4e1ff8754a93f47564d47b963cc9051)
++++ /dev/null	(revision 274e4d7fc4e1ff8754a93f47564d47b963cc9051)
+@@ -1,40 +0,0 @@
+-Index: app/src/main/java/com/example/cs490_drivesense/ActiveCalibrationActivity.java
+-IDEA additional info:
+-Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+-<+>package com.example.cs490_drivesense;\r\n\r\nimport android.Manifest;\r\nimport android.content.pm.PackageManager;\r\nimport android.graphics.Bitmap;\r\nimport android.graphics.BitmapFactory;\r\nimport android.graphics.ImageFormat;\r\nimport android.graphics.YuvImage;\r\nimport android.media.Image;\r\nimport android.os.Bundle;\r\nimport android.util.Log;\r\nimport android.widget.LinearLayout;\r\nimport android.widget.TextView;\r\nimport android.widget.Toast;\r\nimport androidx.annotation.NonNull;\r\nimport androidx.annotation.OptIn;\r\nimport androidx.appcompat.app.AppCompatActivity;\r\nimport androidx.camera.core.*;\r\nimport androidx.camera.lifecycle.ProcessCameraProvider;\r\nimport androidx.camera.view.PreviewView;\r\nimport androidx.core.app.ActivityCompat;\r\nimport androidx.core.content.ContextCompat;\r\nimport com.google.common.util.concurrent.ListenableFuture;\r\nimport java.io.ByteArrayOutputStream;\r\nimport java.nio.ByteBuffer;\r\nimport java.util.concurrent.ExecutorService;\r\nimport java.util.concurrent.Executors;\r\n\r\npublic class ActiveCalibrationActivity extends AppCompatActivity {\r\n    private static final int TARGET_FPS = 15;\r\n    private static final long FRAME_INTERVAL_MS = 1000 / TARGET_FPS; //66ms interval for 15fps use\r\n    private long lastProcessedTime = 0; //Timestamp of the last frame processed\r\n\r\n    private static final int INPUT_SIZE = 128;\r\n\r\n    //Camera private variables\r\n    private LinearLayout resultsLayout; //Declare resultsLayout\r\n    private PreviewView previewView;\r\n    private ExecutorService cameraExecutor;\r\n    private static final int CAMERA_PERMISSION_CODE = 100;\r\n\r\n    //FADM private variable\r\n    private FacialAttributeDetectorTFLite facialAttributeDetector; // TFLite Model\r\n\r\n    @Override\r\n    protected void onCreate(Bundle savedInstanceState) {\r\n        super.onCreate(savedInstanceState);\r\n        setContentView(R.layout.activity_active_calibration);\r\n\r\n        previewView = findViewById(R.id.previewView);\r\n        // Results layout not found\r\n        //resultsLayout = findViewById(R.id.resultsLayout);\r\n\r\n        //Retrieve preloaded model from the Application class\r\n        facialAttributeDetector = ((DriveSenseApplication) getApplication()).getFacialAttributeModel();\r\n\r\n        if (facialAttributeDetector == null) {\r\n            Log.e(\"ActiveCalibration\", \"TFLite model was NOT preloaded!\");\r\n        }\r\n\r\n        // Check and request camera permissions\r\n        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {\r\n            startCamera();\r\n        } else {\r\n            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, CAMERA_PERMISSION_CODE);\r\n        }\r\n\r\n        cameraExecutor = Executors.newSingleThreadExecutor();\r\n    }\r\n\r\n\r\n    private void startCamera() {\r\n        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);\r\n\r\n        cameraProviderFuture.addListener(() -> {\r\n            try {\r\n                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();\r\n\r\n                CameraSelector cameraSelector = new CameraSelector.Builder()\r\n                        .requireLensFacing(CameraSelector.LENS_FACING_FRONT) // Use front camera for driver tracking\r\n                        .build();\r\n\r\n                Preview preview = new Preview.Builder().build();\r\n                preview.setSurfaceProvider(previewView.getSurfaceProvider());\r\n\r\n                // Image analysis for real-time inference\r\n                ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()\r\n                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)\r\n                        .setTargetResolution(new android.util.Size(INPUT_SIZE, INPUT_SIZE)) // Match model input size 128 X 128\r\n                        .build();\r\n\r\n                // Set the analyzer for real-time frame processing\r\n                imageAnalysis.setAnalyzer(cameraExecutor, image -> {\r\n                    long currentTime = System.currentTimeMillis();\r\n                    // Only process frames if 66ms (1/15 fps) have passed since the last frame\r\n                    if (currentTime - lastProcessedTime >= FRAME_INTERVAL_MS) {\r\n                        // Convert the camera frame to resized Bitmap\r\n                        Bitmap bitmap = imageToResizedBitmap(image);\r\n\r\n                        if (bitmap != null) {\r\n                            // Run inference on the float array using the model\r\n                            FacialAttributeData results = facialAttributeDetector.detectFacialAttributes(bitmap);\r\n                            //Log.d(\"TFLite\", \"Facial Attributes: \" + arrayToString(results));\r\n\r\n                            // Update the last processed time\r\n                            lastProcessedTime = currentTime;\r\n\r\n                            // Update the UI with the results\r\n                            runOnUiThread(() -> updateAttributesUI(results));\r\n                        }\r\n                    }\r\n                    image.close();\r\n                });\r\n\r\n                // Camera binding with logging\r\n                Camera camera = cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);\r\n                Log.d(\"CameraX\", \"Camera bound successfully\");\r\n\r\n            } catch (Exception e) {\r\n                Log.e(\"CameraX\", \"Use case binding failed\", e);\r\n            }\r\n        }, ContextCompat.getMainExecutor(this));\r\n    }\r\n\r\n    // Update the UI with the detected attributes\r\n    private void updateAttributesUI(FacialAttributeData results) {\r\n        // Assuming results contains the attributes booleans: Eye Openness, Liveness, Glasses, Mask, etc.\r\n\r\n        // Check if the results are being passed correctly\r\n        Log.d(\"FacialAttributes\", \"Eye Openness Left: \" + !results.eyeClosenessL);\r\n        Log.d(\"FacialAttributes\", \"Eye Openness Right: \" + !results.eyeClosenessR);\r\n        Log.d(\"FacialAttributes\", \"Liveness: \" + results.liveness);\r\n        Log.d(\"FacialAttributes\", \"Glasses: \" + results.glasses);\r\n        Log.d(\"FacialAttributes\", \"Sunglasses: \" + results.sunglasses);\r\n        Log.d(\"FacialAttributes\", \"Mask: \" + results.mask);\r\n        // Display results\r\n        TextView eyeOpennessText = findViewById(R.id.eyeOpennessText);\r\n        TextView livenessText = findViewById(R.id.livenessText);\r\n        TextView glassesText = findViewById(R.id.glassesText);\r\n        TextView maskText = findViewById(R.id.maskText);\r\n        TextView sunglassesText = findViewById(R.id.sunglassesText);\r\n\r\n        eyeOpennessText.setText(\"Eye Openness: Left: \" + (!results.eyeClosenessL ? \"True\" : \"False\") + \", Right: \" + (!results.eyeClosenessR ? \"True\" : \"False\"));\r\n        livenessText.setText(\"Liveness: \" + (results.liveness ? \"True\" : \"False\"));\r\n        glassesText.setText(\"Glasses: \" + (results.glasses ? \"True\" : \"False\"));\r\n        maskText.setText(\"Mask: \" + (results.mask ? \"True\" : \"False\"));\r\n        sunglassesText.setText(\"Sunglasses: \" + (results.sunglasses ? \"True\" : \"False\"));\r\n    }\r\n\r\n//    private float[] bitmapToFloatArray(Bitmap bitmap) {\r\n//        int width = bitmap.getWidth();\r\n//        int height = bitmap.getHeight();\r\n//        int[] intArray = new int[width * height];\r\n//        bitmap.getPixels(intArray, 0, width, 0, 0, width, height);\r\n//\r\n//        float[] floatArray = new float[width * height * 3];  // 3 channels for RGB\r\n//\r\n//        // Normalize each pixel and fill the float array\r\n//        for (int i = 0; i < intArray.length; i++) {\r\n//            int pixel = intArray[i];\r\n//            floatArray[i * 3] = ((pixel >> 16) & 0xFF) / 255.0f;  // Red channel\r\n//            floatArray[i * 3 + 1] = ((pixel >> 8) & 0xFF) / 255.0f;   // Green channel\r\n//            floatArray[i * 3 + 2] = (pixel & 0xFF) / 255.0f;  // Blue channel\r\n//        }\r\n//\r\n//        return floatArray;\r\n//    }\r\n\r\n    // Convert CameraX ImageProxy to Bitmap\r\n    @OptIn(markerClass = ExperimentalGetImage.class)\r\n    private Bitmap imageToResizedBitmap(ImageProxy imageProxy) {\r\n        Image image = imageProxy.getImage();\r\n        if (image == null) return null;\r\n\r\n        try {\r\n            ByteBuffer buffer = image.getPlanes()[0].getBuffer();\r\n            byte[] bytes = new byte[buffer.remaining()];\r\n            buffer.get(bytes);\r\n\r\n            // Convert YUV to RGB Bitmap\r\n            YuvImage yuvImage = new YuvImage(bytes, ImageFormat.NV21, image.getWidth(), image.getHeight(), null);\r\n            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();\r\n            yuvImage.compressToJpeg(new android.graphics.Rect(0, 0, image.getWidth(), image.getHeight()), 100, outputStream);\r\n            byte[] jpegBytes = outputStream.toByteArray();\r\n\r\n            // Decode the byte array into a Bitmap\r\n            Bitmap bitmap = BitmapFactory.decodeByteArray(jpegBytes, 0, jpegBytes.length);\r\n\r\n            // Resize the Bitmap to match the input size expected by the model (e.g., 128x128)\r\n            Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, INPUT_SIZE, INPUT_SIZE, true);\r\n\r\n            return resizedBitmap;\r\n\r\n        } catch (Exception e) {\r\n            Log.e(\"ActiveCalibration\", \"Error converting image to bitmap\", e);\r\n            return null;\r\n        } finally {\r\n            image.close(); // Ensure image is closed in case of error\r\n        }\r\n    }\r\n\r\n    private String arrayToString(float[] array) {\r\n        StringBuilder sb = new StringBuilder();\r\n        for (float value : array) {\r\n            sb.append(value).append(\" \");\r\n        }\r\n        return sb.toString();\r\n    }\r\n\r\n    @Override\r\n    protected void onDestroy() {\r\n        super.onDestroy();\r\n        cameraExecutor.shutdown();\r\n    }\r\n\r\n    // Handle camera permission request\r\n    @Override\r\n    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {\r\n        super.onRequestPermissionsResult(requestCode, permissions, grantResults);\r\n        if (requestCode == CAMERA_PERMISSION_CODE) {\r\n            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {\r\n                startCamera();\r\n            } else {\r\n                Toast.makeText(this, \"Camera permission is required!\", Toast.LENGTH_SHORT).show();\r\n                finish(); // Close the activity if permission is denied\r\n            }\r\n        }\r\n    }\r\n}
+-Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+-<+>UTF-8
+-===================================================================
+-diff --git a/app/src/main/java/com/example/cs490_drivesense/ActiveCalibrationActivity.java b/app/src/main/java/com/example/cs490_drivesense/ActiveCalibrationActivity.java
+---- a/app/src/main/java/com/example/cs490_drivesense/ActiveCalibrationActivity.java	(revision 4a2fcc84631f33dcb3627f54f50f3955fcf54d6b)
+-+++ b/app/src/main/java/com/example/cs490_drivesense/ActiveCalibrationActivity.java	(date 1741995684681)
+-@@ -49,7 +49,7 @@
+- 
+-         previewView = findViewById(R.id.previewView);
+-         // Results layout not found
+--        //resultsLayout = findViewById(R.id.resultsLayout);
+-+        resultsLayout = findViewById(R.id.resultsLayout);
+- 
+-         //Retrieve preloaded model from the Application class
+-         facialAttributeDetector = ((DriveSenseApplication) getApplication()).getFacialAttributeModel();
+-@@ -199,13 +199,13 @@
+-         }
+-     }
+- 
+--    private String arrayToString(float[] array) {
+--        StringBuilder sb = new StringBuilder();
+--        for (float value : array) {
+--            sb.append(value).append(" ");
+--        }
+--        return sb.toString();
+--    }
+-+//    private String arrayToString(float[] array) {
+-+//        StringBuilder sb = new StringBuilder();
+-+//        for (float value : array) {
+-+//            sb.append(value).append(" ");
+-+//        }
+-+//        return sb.toString();
+-+//    }
+- 
+-     @Override
+-     protected void onDestroy() {
+Index: .idea/shelf/Uncommitted_changes_before_Update_at_3_15_2025_5_04_PM__Changes_.xml
+===================================================================
+diff --git a/.idea/shelf/Uncommitted_changes_before_Update_at_3_15_2025_5_04_PM__Changes_.xml b/.idea/shelf/Uncommitted_changes_before_Update_at_3_15_2025_5_04_PM__Changes_.xml
+deleted file mode 100644
+--- a/.idea/shelf/Uncommitted_changes_before_Update_at_3_15_2025_5_04_PM__Changes_.xml	(revision 274e4d7fc4e1ff8754a93f47564d47b963cc9051)
++++ /dev/null	(revision 274e4d7fc4e1ff8754a93f47564d47b963cc9051)
+@@ -1,4 +0,0 @@
+-<changelist name="Uncommitted_changes_before_Update_at_3_15_2025_5_04_PM_[Changes]" date="1742083487245" recycled="true" deleted="true">
+-  <option name="PATH" value="$PROJECT_DIR$/.idea/shelf/Uncommitted_changes_before_Update_at_3_15_2025_5_04_PM_[Changes]/shelved.patch" />
+-  <option name="DESCRIPTION" value="Uncommitted changes before Update at 3/15/2025 5:04 PM [Changes]" />
+-</changelist>
+\ No newline at end of file
+Index: gradle/libs.versions.toml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>[versions]\r\nagp = \"8.6.0\"\r\ncameraCamera2 = \"1.0.0\"\r\ncameraLifecycleVersion = \"1.0.0\"\r\ncameraViewVersion = \"1.0.0\"\r\njunit = \"4.13.2\"\r\njunitVersion = \"1.2.1\"\r\nespressoCore = \"3.6.1\"\r\nappcompat = \"1.7.0\"\r\nmaterial = \"1.12.0\"\r\nactivity = \"1.10.1\"\r\nconstraintlayout = \"2.2.1\"\r\ncameraCore = \"1.4.1\"\r\ncameraLifecycle = \"1.4.1\"\r\ncameraView = \"1.4.1\"\r\nlitert = \"1.1.2\"\r\nlitertSupportApi = \"1.1.2\"\r\nrenderscriptIntrinsicsReplacementToolkit = \"b6363490c3\"\r\ntensorflowCorePlatform = \"0.3.3\"\r\ntensorflowCorePlatformVersion = \"0.5.0\"\r\ntensorflowLiteSupport = \"2.9.0\"\r\n\r\n[libraries]\r\ncamera-camera2 = { module = \"androidx.camera:camera-camera2\", version.ref = \"cameraCamera2\" }\r\ncamera-lifecycle-v100 = { module = \"androidx.camera:camera-lifecycle\", version.ref = \"cameraLifecycleVersion\" }\r\ncamera-view-v100 = { module = \"androidx.camera:camera-view\", version.ref = \"cameraViewVersion\" }\r\njunit = { group = \"junit\", name = \"junit\", version.ref = \"junit\" }\r\next-junit = { group = \"androidx.test.ext\", name = \"junit\", version.ref = \"junitVersion\" }\r\nespresso-core = { group = \"androidx.test.espresso\", name = \"espresso-core\", version.ref = \"espressoCore\" }\r\nappcompat = { group = \"androidx.appcompat\", name = \"appcompat\", version.ref = \"appcompat\" }\r\nmaterial = { group = \"com.google.android.material\", name = \"material\", version.ref = \"material\" }\r\nactivity = { group = \"androidx.activity\", name = \"activity\", version.ref = \"activity\" }\r\nconstraintlayout = { group = \"androidx.constraintlayout\", name = \"constraintlayout\", version.ref = \"constraintlayout\" }\r\ncamera-core = { group = \"androidx.camera\", name = \"camera-core\", version.ref = \"cameraCore\" }\r\ncamera-lifecycle = { group = \"androidx.camera\", name = \"camera-lifecycle\", version.ref = \"cameraLifecycle\" }\r\ncamera-view = { group = \"androidx.camera\", name = \"camera-view\", version.ref = \"cameraView\" }\r\nlitert = { group = \"com.google.ai.edge.litert\", name = \"litert\", version.ref = \"litert\" }\r\nlitert-support-api = { group = \"com.google.ai.edge.litert\", name = \"litert-support-api\", version.ref = \"litertSupportApi\" }\r\nrenderscript-intrinsics-replacement-toolkit = { module = \"com.github.android:renderscript-intrinsics-replacement-toolkit\", version.ref = \"renderscriptIntrinsicsReplacementToolkit\" }\r\ntensorflow-core-platform = { module = \"org.tensorflow:tensorflow-core-platform\", version.ref = \"tensorflowCorePlatform\" }\r\ntensorflow-core-platform-v050 = { module = \"org.tensorflow:tensorflow-core-platform\", version.ref = \"tensorflowCorePlatformVersion\" }\r\ntensorflow-lite = { module = \"org.tensorflow:tensorflow-lite\", version.ref = \"tensorflowLiteSupport\" }\r\ntensorflow-lite-support = { module = \"org.tensorflow:tensorflow-lite-support\", version.ref = \"tensorflowLiteSupport\" }\r\n\r\n[plugins]\r\nandroid-application = { id = \"com.android.application\", version.ref = \"agp\" }\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/gradle/libs.versions.toml b/gradle/libs.versions.toml
+--- a/gradle/libs.versions.toml	(revision 274e4d7fc4e1ff8754a93f47564d47b963cc9051)
++++ b/gradle/libs.versions.toml	(date 1742426212372)
+@@ -1,5 +1,5 @@
+ [versions]
+-agp = "8.6.0"
++agp = "8.9.0"
+ cameraCamera2 = "1.0.0"
+ cameraLifecycleVersion = "1.0.0"
+ cameraViewVersion = "1.0.0"
+@@ -15,6 +15,7 @@
+ cameraView = "1.4.1"
+ litert = "1.1.2"
+ litertSupportApi = "1.1.2"
++opencv = "4.11.0"
+ renderscriptIntrinsicsReplacementToolkit = "b6363490c3"
+ tensorflowCorePlatform = "0.3.3"
+ tensorflowCorePlatformVersion = "0.5.0"
+@@ -36,6 +37,7 @@
+ camera-view = { group = "androidx.camera", name = "camera-view", version.ref = "cameraView" }
+ litert = { group = "com.google.ai.edge.litert", name = "litert", version.ref = "litert" }
+ litert-support-api = { group = "com.google.ai.edge.litert", name = "litert-support-api", version.ref = "litertSupportApi" }
++opencv = {module = "org.opencv:opencv", version.ref = "opencv"}
+ renderscript-intrinsics-replacement-toolkit = { module = "com.github.android:renderscript-intrinsics-replacement-toolkit", version.ref = "renderscriptIntrinsicsReplacementToolkit" }
+ tensorflow-core-platform = { module = "org.tensorflow:tensorflow-core-platform", version.ref = "tensorflowCorePlatform" }
+ tensorflow-core-platform-v050 = { module = "org.tensorflow:tensorflow-core-platform", version.ref = "tensorflowCorePlatformVersion" }
+Index: gradle/wrapper/gradle-wrapper.properties
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>#Wed Mar 05 16:27:25 PST 2025\r\ndistributionBase=GRADLE_USER_HOME\r\ndistributionPath=wrapper/dists\r\ndistributionUrl=https\\://services.gradle.org/distributions/gradle-8.10.2-bin.zip\r\nzipStoreBase=GRADLE_USER_HOME\r\nzipStorePath=wrapper/dists\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>ISO-8859-1
+===================================================================
+diff --git a/gradle/wrapper/gradle-wrapper.properties b/gradle/wrapper/gradle-wrapper.properties
+--- a/gradle/wrapper/gradle-wrapper.properties	(revision 274e4d7fc4e1ff8754a93f47564d47b963cc9051)
++++ b/gradle/wrapper/gradle-wrapper.properties	(date 1742254184211)
+@@ -1,6 +1,6 @@
+ #Wed Mar 05 16:27:25 PST 2025
+ distributionBase=GRADLE_USER_HOME
+ distributionPath=wrapper/dists
+-distributionUrl=https\://services.gradle.org/distributions/gradle-8.10.2-bin.zip
++distributionUrl=https\://services.gradle.org/distributions/gradle-8.11.1-bin.zip
+ zipStoreBase=GRADLE_USER_HOME
+ zipStorePath=wrapper/dists
+Index: .idea/compiler.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"CompilerConfiguration\">\r\n    <bytecodeTargetLevel target=\"17\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/compiler.xml b/.idea/compiler.xml
+--- a/.idea/compiler.xml	(revision 274e4d7fc4e1ff8754a93f47564d47b963cc9051)
++++ b/.idea/compiler.xml	(date 1742254128127)
+@@ -1,6 +1,6 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+   <component name="CompilerConfiguration">
+-    <bytecodeTargetLevel target="17" />
++    <bytecodeTargetLevel target="21" />
+   </component>
+ </project>
+\ No newline at end of file
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"ExternalStorageConfigurationManager\" enabled=\"true\" />\r\n  <component name=\"ProjectRootManager\" version=\"2\" languageLevel=\"JDK_21\" default=\"true\" project-jdk-name=\"jbr-21\" project-jdk-type=\"JavaSDK\">\r\n    <output url=\"file://$PROJECT_DIR$/build/classes\" />\r\n  </component>\r\n  <component name=\"ProjectType\">\r\n    <option name=\"id\" value=\"Android\" />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+--- a/.idea/misc.xml	(revision 274e4d7fc4e1ff8754a93f47564d47b963cc9051)
++++ b/.idea/misc.xml	(date 1742425436920)
+@@ -1,4 +1,3 @@
+-<?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+   <component name="ExternalStorageConfigurationManager" enabled="true" />
+   <component name="ProjectRootManager" version="2" languageLevel="JDK_21" default="true" project-jdk-name="jbr-21" project-jdk-type="JavaSDK">
+Index: app/build.gradle
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>plugins {\r\n    alias(libs.plugins.android.application)\r\n}\r\n\r\nandroid {\r\n    namespace 'com.example.cs490_drivesense'\r\n    compileSdk 35\r\n\r\n    defaultConfig {\r\n        applicationId \"com.example.cs490_drivesense\"\r\n        minSdk 29\r\n        targetSdk 35\r\n        versionCode 1\r\n        versionName \"1.0\"\r\n\r\n        testInstrumentationRunner \"androidx.test.runner.AndroidJUnitRunner\"\r\n    }\r\n\r\n    buildTypes {\r\n        release {\r\n            minifyEnabled false\r\n            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'\r\n        }\r\n    }\r\n    compileOptions {\r\n        sourceCompatibility JavaVersion.VERSION_11\r\n        targetCompatibility JavaVersion.VERSION_11\r\n    }\r\n}\r\n\r\ndependencies {\r\n    //For CameraX\r\n    implementation libs.camera.core\r\n    implementation libs.camera.camera2\r\n    implementation libs.camera.lifecycle.v100\r\n    implementation libs.camera.view.v100\r\n\r\n    //For TFLite\r\n    implementation libs.litert\r\n    implementation libs.litert.support.api\r\n\r\n    implementation libs.appcompat\r\n    implementation libs.material\r\n    implementation libs.activity\r\n    implementation libs.constraintlayout\r\n    testImplementation libs.junit\r\n    androidTestImplementation libs.ext.junit\r\n    androidTestImplementation libs.espresso.core\r\n\r\n\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/app/build.gradle b/app/build.gradle
+--- a/app/build.gradle	(revision 274e4d7fc4e1ff8754a93f47564d47b963cc9051)
++++ b/app/build.gradle	(date 1742426132064)
+@@ -46,6 +46,6 @@
+     testImplementation libs.junit
+     androidTestImplementation libs.ext.junit
+     androidTestImplementation libs.espresso.core
+-
++    implementation(libs.opencv)
+ 
+ }
+\ No newline at end of file
