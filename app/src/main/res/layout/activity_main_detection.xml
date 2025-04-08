@@ -89,19 +89,22 @@
 
     </LinearLayout>
 
+    <!-- Top Button Container for 'Done' -->
     <LinearLayout
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent"
-        android:orientation="horizontal">
+        android:id="@+id/topButtonLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:orientation="horizontal"
+        android:gravity="end"
+        android:padding="16dp"
+        android:background="@android:color/white">
 
-        <!-- Done Button -->
         <Button
             android:id="@+id/DoneButton"
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:orientation="horizontal"
-            android:text="Done"/>
+            android:text="Done" />
     </LinearLayout>
 
 </RelativeLayout>
