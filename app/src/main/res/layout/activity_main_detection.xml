@@ -104,6 +104,7 @@
             android:id="@+id/DoneButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:backgroundTint="#2196F3"
             android:text="Done" />
     </LinearLayout>
 

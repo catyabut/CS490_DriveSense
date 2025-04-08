@@ -48,6 +48,7 @@ import org.opencv.imgproc.Imgproc;
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -98,6 +99,10 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
     //MPFD private variable
     private MediaPipeFaceDetectionTFLite faceDetector; // TFLite Model
+
+    // Warning log array
+    private ArrayList<String> warningList = new ArrayList<>(); // Stores each warning as a string
+    private boolean isNewSession = true; // Used to reset the warning list the second time calibration is run
     //***********************************************************
 
     @Override
@@ -147,7 +152,6 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         previewView = findViewById(R.id.previewViewAC); //from new layout
         messageLayout = findViewById(R.id.messageLayout);
         cameraToggleButton = findViewById(R.id.cameraToggleButton);
-        exportButton = findViewById(R.id.exportButton);
         deviationWarningText = findViewById(R.id.deviationWarningText);
 
         previewView.setVisibility(View.VISIBLE);
@@ -170,6 +174,13 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
     @OptIn(markerClass = ExperimentalCamera2Interop.class)
     private void startCamera() {
+        // If warning list is not empty and this is a new session clear it otherwise keep the warnings
+        if (isNewSession && !warningList.isEmpty())
+        {
+            warningList.clear();
+            isNewSession = false;
+        }
+
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
         cameraProviderFuture.addListener(() -> {
             try {
@@ -268,8 +279,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                 }
 
                                 boolean deviating = isDeviatingFromNeutral(faceDetectionResults, neutral); // check if driver deviates from neutral
-                                //boolean eyeClosenessLastXResults = eyeClosenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if eyeCloseness is above the threshold for last X results (default is 80%)
-                                //boolean livenessLastXResults = livenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if liveness is above the threshold for last X results
+                                boolean eyeClosenessLastXResults = eyeClosenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if eyeCloseness is above the threshold for last X results (default is 80%)
+                                boolean livenessLastXResults = livenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if liveness is above the threshold for last X results
 
                                 // First check is deviation from neutral
                                 if (deviating) {
@@ -297,57 +308,57 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                     }
                                 }
 //                                // Then check eyeCloseness
-//                                else if (eyeClosenessLastXResults)
-//                                {
-//                                    Log.d("DetectionLoop", "In eyecloseness if statement.");
-//                                    if (!isCurrentlyClosingEyes) {
-//                                        eyeClosenessStartTime = System.currentTimeMillis();
-//                                        isCurrentlyClosingEyes = true;
-//                                    } else {
-//                                        long elapsed = System.currentTimeMillis() - eyeClosenessStartTime;
-//                                        if (elapsed >= EYECLOSENESS_THRESHOLD_MS) {
-//                                            runOnUiThread(() -> {
-//                                                if (deviationWarningText != null) {
-//                                                    deviationWarningText.setText("⚠️ Please open your eyes!");
-//                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0));
-//                                                    deviationWarningText.setVisibility(View.VISIBLE);
-//                                                }
-//                                                if (mediaPlayer == null) {
-//                                                    mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
-//                                                    mediaPlayer.setLooping(true);
-//                                                    mediaPlayer.start();
-//                                                }
-//                                            });
-//                                            Log.w("WARNING", "Driver has been closing eyes more than 2 seconds!");
-//                                        }
-//                                    }
-//                                }
-//                                // Lastly check liveness
-//                                else if (livenessLastXResults)
-//                                {
-//                                    Log.d("DetectionLoop", "In liveness if statement.");
-//                                    if (!isCurrentlyNotLive) {
-//                                        livenessStartTime = System.currentTimeMillis();
-//                                        isCurrentlyNotLive = true;
-//                                    } else {
-//                                        long elapsed = System.currentTimeMillis() - livenessStartTime;
-//                                        if (elapsed >= LIVENESS_THRESHOLD_MS) {
-//                                            runOnUiThread(() -> {
-//                                                if (deviationWarningText != null) {
-//                                                    deviationWarningText.setText("⚠️ Liveness not detected!");
-//                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0));
-//                                                    deviationWarningText.setVisibility(View.VISIBLE);
-//                                                }
-//                                                if (mediaPlayer == null) {
-//                                                    mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
-//                                                    mediaPlayer.setLooping(true);
-//                                                    mediaPlayer.start();
-//                                                }
-//                                            });
-//                                            Log.w("WARNING", "Driver does not have liveness for more than 2 seconds!");
-//                                        }
-//                                    }
-//                                }
+                                else if (eyeClosenessLastXResults)
+                                {
+                                    Log.d("DetectionLoop", "In eyecloseness if statement.");
+                                    if (!isCurrentlyClosingEyes) {
+                                        eyeClosenessStartTime = System.currentTimeMillis();
+                                        isCurrentlyClosingEyes = true;
+                                    } else {
+                                        long elapsed = System.currentTimeMillis() - eyeClosenessStartTime;
+                                        if (elapsed >= EYECLOSENESS_THRESHOLD_MS) {
+                                            runOnUiThread(() -> {
+                                                if (deviationWarningText != null) {
+                                                    deviationWarningText.setText("⚠️ Please open your eyes!");
+                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0));
+                                                    deviationWarningText.setVisibility(View.VISIBLE);
+                                                }
+                                                if (mediaPlayer == null) {
+                                                    mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
+                                                    mediaPlayer.setLooping(true);
+                                                    mediaPlayer.start();
+                                                }
+                                            });
+                                            Log.w("WARNING", "Driver has been closing eyes more than 2 seconds!");
+                                        }
+                                    }
+                                }
+                                // Lastly check liveness
+                                else if (livenessLastXResults)
+                                {
+                                    Log.d("DetectionLoop", "In liveness if statement.");
+                                    if (!isCurrentlyNotLive) {
+                                        livenessStartTime = System.currentTimeMillis();
+                                        isCurrentlyNotLive = true;
+                                    } else {
+                                        long elapsed = System.currentTimeMillis() - livenessStartTime;
+                                        if (elapsed >= LIVENESS_THRESHOLD_MS) {
+                                            runOnUiThread(() -> {
+                                                if (deviationWarningText != null) {
+                                                    deviationWarningText.setText("⚠️ Liveness not detected!");
+                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0));
+                                                    deviationWarningText.setVisibility(View.VISIBLE);
+                                                }
+                                                if (mediaPlayer == null) {
+                                                    mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
+                                                    mediaPlayer.setLooping(true);
+                                                    mediaPlayer.start();
+                                                }
+                                            });
+                                            Log.w("WARNING", "Driver does not have liveness for more than 2 seconds!");
+                                        }
+                                    }
+                                }
                                 // If driver passes every check reset the chime and hide warning text
                                 else {
                                     runOnUiThread(() -> {
@@ -702,20 +713,24 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     // Function to check if eye closeness was detected the last X results returns boolean for use in active session
     public boolean eyeClosenessDetectedXTimes(FacialAttributeData[] history)
     {
+        Log.e("Eyecloseness detection", "In function eyeClosenessDetectedXTimes");
         int positives = 0; // Used to get ratio of positive detections
         int total = history.length;
 
         // History should not be empty
         if (history == null) {
-            Log.e("Calibration", "eyeClosenessDetectedXTimes: history array is null!");
+            Log.e("Eyecloseness detection", "eyeClosenessDetectedXTimes: history array is null!");
             return false;
         }
 
         // For each recorded result
         for (int i = 0; i < history.length; i++) {
             // Either Result is true count it
+            Log.e("Eyecloseness detection", "eyeClosenessL = " + Boolean.toString(history[i].eyeClosenessL));
+            Log.e("Eyecloseness detection", "eyeClosenessR = " + Boolean.toString(history[i].eyeClosenessR));
             if (history[i].eyeClosenessL || history[i].eyeClosenessR)
             {
+                Log.e("Eyecloseness detection", "Counted as positive");
                 positives += 1;
             }
         }
@@ -725,10 +740,20 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         // If true detections exceed the threshold
         if (ratio > MIN_ATTRIBUTE_THRESHOLD)
         {
+            // Generate a warning message
+            SessionTimer sTimer = new SessionTimer();
+            Log.e("Eyecloseness detection", "Return true ratio greater than .80");
+            String warningMsg = "WARNING! Time: ";
+            ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
+            String timeStr = sTimer.getTimeStr(timeOfWarning);
+            warningMsg += timeStr;
+            warningMsg += " Cause: Eyes are closed!";
+            warningList.add(warningMsg);
             return true; // Eyecloseness detected
         }
         else
         {
+            Log.e("Eyecloseness detection", "Return false ratio less than .80");
             return false; // Eyecloseness not detected
         }
     }
@@ -763,6 +788,15 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         }
         else
         {
+            // Generate a warning message
+            SessionTimer sTimer = new SessionTimer();
+            Log.e("Liveness detection", "Return true ratio greater than .80");
+            String warningMsg = "WARNING! Time: ";
+            ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
+            String timeStr = sTimer.getTimeStr(timeOfWarning);
+            warningMsg += timeStr;
+            warningMsg += " Cause: Liveness false!";
+            warningList.add(warningMsg);
             return false; // Liveness not detected
         }
     }
@@ -857,38 +891,37 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         // Check which direction the driver is deviating
         if (deviating)
         {
+            // Create a warning message if driver deviates with time and cause
+            String warningMsg = "WARNING! Time: ";
+            ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
+            String timeStr = sTimer.getTimeStr(timeOfWarning);
+            warningMsg += timeStr;
+            warningMsg += " Cause: ";
             // Turning Left
             if (results.noseTipX > neutral.noseTipX)
             {
-                ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
-                String timeStr = sTimer.getTimeStr(timeOfWarning);
-                String warningMsg = timeStr + ": Driver looking Left!";
-                Log.e("WARNING!", warningMsg);
+                warningMsg += "Driver looking Left!";
+                Log.e("WARNING!", timeStr + ": Driver looking Left!");
             }
             // Turning Right
             if (results.noseTipX < neutral.noseTipX)
             {
-                ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
-                String timeStr = sTimer.getTimeStr(timeOfWarning);
-                String warningMsg = timeStr + ": Driver looking Right!";
-                Log.e("WARNING!", warningMsg);
+                warningMsg += "Driver looking Right!";
+                Log.e("WARNING!", timeStr + ": Driver looking Right!");
             }
             // Looking Up
             if (results.noseTipY < neutral.noseTipY)
             {
-                ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
-                String timeStr = sTimer.getTimeStr(timeOfWarning);
-                String warningMsg = timeStr + ": Driver looking Up!";
-                Log.e("WARNING!", warningMsg);
+                warningMsg += "Driver looking Up!";
+                Log.e("WARNING!", timeStr + ": Driver looking Up!");
             }
             // Looking Down
             if (results.noseTipY > neutral.noseTipY)
             {
-                ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
-                String timeStr = sTimer.getTimeStr(timeOfWarning);
-                String warningMsg = timeStr + ": Driver looking Down!";
-                Log.e("WARNING!", warningMsg);
+                warningMsg += "Driver looking Down!";
+                Log.e("WARNING!", timeStr + ": Driver looking Down!");
             }
+            warningList.add(warningMsg); // Append the warning to the list
         }
         return deviating;
     }
