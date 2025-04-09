@@ -85,6 +85,16 @@
             android:background="@android:color/transparent"
             android:contentDescription="Toggle Camera"/>
 
+        <!-- Recalibrate Button -->
+        <ImageButton
+            android:id="@+id/recalibrateButton"
+            android:layout_width="64dp"
+            android:layout_height="64dp"
+            android:src="@drawable/ic_camera"
+            android:background="@android:color/transparent"
+            android:contentDescription="Recalibrate"/>
+
+
         <!-- Spacer between buttons -->
 
     </LinearLayout>

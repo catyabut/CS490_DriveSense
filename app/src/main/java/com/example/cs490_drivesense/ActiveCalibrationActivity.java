@@ -5,7 +5,7 @@ import static com.example.cs490_drivesense.MediaPipeFaceDetectionTFLite.distBetw
 
 import static org.opencv.core.CvType.CV_8UC1;
 import static org.opencv.imgproc.Imgproc.cvtColor;
-
+import android.content.Intent;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
@@ -154,6 +154,12 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         cameraToggleButton = findViewById(R.id.cameraToggleButton);
         deviationWarningText = findViewById(R.id.deviationWarningText);
 
+        ImageButton recalibrateButton = findViewById(R.id.recalibrateButton);
+        recalibrateButton.setOnClickListener(view -> {
+            Intent intent = getIntent();
+            finish(); // close current instance
+            startActivity(intent); // start it fresh
+                });
         previewView.setVisibility(View.VISIBLE);
         messageLayout.setVisibility(View.GONE);
 
