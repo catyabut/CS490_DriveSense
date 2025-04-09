@@ -776,8 +776,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
         // For each recorded result
         for (int i = 0; i < history.length; i++) {
-            // Result is true count it
-            if (history[i].liveness)
+            // Result is false count it
+            if (!history[i].liveness)
             {
                 positives += 1;
             }
