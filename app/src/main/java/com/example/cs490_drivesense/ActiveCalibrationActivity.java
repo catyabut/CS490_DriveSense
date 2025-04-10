@@ -5,6 +5,8 @@ import static com.example.cs490_drivesense.MediaPipeFaceDetectionTFLite.distBetw
 
 import static org.opencv.core.CvType.CV_8UC1;
 import static org.opencv.imgproc.Imgproc.cvtColor;
+
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -23,12 +25,14 @@ import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.OptIn;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.camera2.interop.Camera2Interop.Extender;
 import androidx.camera.camera2.interop.ExperimentalCamera2Interop;
@@ -163,6 +167,39 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             finish(); // close current instance
             startActivity(intent); // start it fresh
                 });
+
+
+        Button doneButton = findViewById(R.id.DoneButton);
+        // When done button is pressed in activity_main_detection
+        doneButton.setOnClickListener(view -> {
+            // Create popup to ask user if they want to see the warning log
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("View Warnings?");
+            builder.setMessage("Would you like to see your warnings?");
+            builder.setPositiveButton("Yes", new DialogInterface.OnClickListener()
+            {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    // Yes button should switch to the warning activity and pass the warningList
+                    Intent intent = new Intent(ActiveCalibrationActivity.this, WarningActivity.class);
+                    intent.putStringArrayListExtra("warnings", warningList);
+                    startActivity(intent);
+                }
+            });
+            builder.setNegativeButton("No", new DialogInterface.OnClickListener()
+            {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    // No button should go back to calibrationActivity
+                    // Reset the booleans for calibration
+                    isCalibrationComplete = false; // Reset calibration to get next neutral pos
+                    isPostCalibLayoutRdy = false; // Layout will not be ready in next session
+                    isNewSession = true; // Clear waring list for next session
+                    Intent intent = new Intent(ActiveCalibrationActivity.this, CalibrationActivity.class);
+                    startActivity(intent);
+                }
+            });
+        });
 
         previewView.setVisibility(View.VISIBLE);
         messageLayout.setVisibility(View.GONE);
