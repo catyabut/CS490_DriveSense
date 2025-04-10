@@ -154,12 +154,16 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         cameraToggleButton = findViewById(R.id.cameraToggleButton);
         deviationWarningText = findViewById(R.id.deviationWarningText);
 
+        //Recalibrate Button Functionality
         ImageButton recalibrateButton = findViewById(R.id.recalibrateButton);
         recalibrateButton.setOnClickListener(view -> {
             Intent intent = getIntent();
+            isCalibrationComplete = false;
+            isPostCalibLayoutRdy = false;
             finish(); // close current instance
             startActivity(intent); // start it fresh
                 });
+
         previewView.setVisibility(View.VISIBLE);
         messageLayout.setVisibility(View.GONE);
 
