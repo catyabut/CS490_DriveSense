@@ -164,6 +164,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             Intent intent = getIntent();
             isCalibrationComplete = false;
             isPostCalibLayoutRdy = false;
+            counter = 0;
             finish(); // close current instance
             startActivity(intent); // start it fresh
                 });
@@ -195,6 +196,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                     isCalibrationComplete = false; // Reset calibration to get next neutral pos
                     isPostCalibLayoutRdy = false; // Layout will not be ready in next session
                     isNewSession = true; // Clear waring list for next session
+                    counter = 0;
                     Intent intent = new Intent(ActiveCalibrationActivity.this, CalibrationActivity.class);
                     startActivity(intent);
                 }
