@@ -165,7 +165,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             isCalibrationComplete = false;
             isPostCalibLayoutRdy = false;
             counter = 0;
-            finish(); // close current instance
+            //finish(); // close current instance
             startActivity(intent); // start it fresh
                 });
 
@@ -182,6 +182,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     // Yes button should switch to the warning activity and pass the warningList
+                    // Reset the booleans for calibration
+                    isCalibrationComplete = false; // Reset calibration to get next neutral pos
+                    isPostCalibLayoutRdy = false; // Layout will not be ready in next session
+                    isNewSession = true; // Clear waring list for next session
+                    counter = 0;
                     Intent intent = new Intent(ActiveCalibrationActivity.this, WarningActivity.class);
                     intent.putStringArrayListExtra("warnings", warningList);
                     startActivity(intent);
@@ -201,6 +206,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                     startActivity(intent);
                 }
             });
+            builder.create();
+            builder.show();
         });
 
         previewView.setVisibility(View.VISIBLE);
