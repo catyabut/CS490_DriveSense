@@ -190,6 +190,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                     Intent intent = new Intent(ActiveCalibrationActivity.this, WarningActivity.class);
                     intent.putStringArrayListExtra("warnings", warningList);
                     startActivity(intent);
+                    unbindCamera();
                     finish();
                 }
             });
@@ -530,6 +531,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 //        leftEarText.setText("Left Ear (X, Y): " + " (" + faceDetectionResults.leftEarTragionX + ", " + faceDetectionResults.leftEarTragionY);
 
         TextView calibrationStatusText = findViewById(R.id.calibrationStatusText);
+
+        if (calibrationStatusText == null) {
+            Log.e("updateAttributesUI", "calibrationStatusText is null! Skipping UI update.");
+            return;
+        }
 
         if (counter < CALIBRATION_FRAME_COUNT) {
             calibrationStatusText.setText("Calibrating... Hold still.");
@@ -986,6 +992,16 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             warningList.add(warningMsg); // Append the warning to the list
         }
         return deviating;
+    }
+
+    private void unbindCamera() {
+        try {
+            ProcessCameraProvider cameraProvider = ProcessCameraProvider.getInstance(this).get();
+            cameraProvider.unbindAll();
+            Log.d("ActiveCalibration", "Camera unbound before activity closed.");
+        } catch (Exception e) {
+            Log.e("ActiveCalibration", "Error unbinding camera", e);
+        }
     }
 
 //    private void drawFaceBox(MediaPipeFaceDetectionData faceData, Bitmap inputBitmap) {

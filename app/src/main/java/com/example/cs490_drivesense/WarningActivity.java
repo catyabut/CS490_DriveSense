@@ -2,11 +2,13 @@ package com.example.cs490_drivesense;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -25,11 +27,16 @@ public class WarningActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_warning);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+        ConstraintLayout rootLayout = findViewById(R.id.main);
+        if (rootLayout != null) {
+            ViewCompat.setOnApplyWindowInsetsListener(rootLayout, (v, insets) -> {
+                Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+                return insets;
+            });
+        } else {
+            Log.e("WarningActivity", "Root layout 'main' was null!");
+        }
 
         warningTextView = findViewById(R.id.warningsTextView);
         exportButton = findViewById(R.id.exportButton);
@@ -37,18 +44,18 @@ public class WarningActivity extends AppCompatActivity {
         warningList = getIntent().getStringArrayListExtra("warnings");
 
         // Make sure there are warnings to display
-        if (warningList != null && !warningList.isEmpty())
-        {
-            StringBuilder builder = new StringBuilder();
-            // Concatenate all warnings so they are one long string for use in TextView
-            for (String warning : warningList)
-            {
-                builder.append(warning).append("\n");
+        if (warningTextView != null) {
+            if (warningList != null && !warningList.isEmpty()) {
+                StringBuilder builder = new StringBuilder();
+                for (String warning : warningList) {
+                    builder.append(warning).append("\n");
+                }
+                warningTextView.setText(builder.toString());
+            } else {
+                warningTextView.setText("There are no warnings to display.");
             }
-            warningTextView.setText(builder.toString());
-        }
-        else
-        {
+        } else {
+            Log.e("WarningActivity", "warningTextView is null! Cannot set warning text.");
             warningTextView.setText("There are no warnings to display.");
         }
 
