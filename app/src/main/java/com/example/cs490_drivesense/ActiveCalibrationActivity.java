@@ -165,7 +165,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             isCalibrationComplete = false;
             isPostCalibLayoutRdy = false;
             counter = 0;
-            //finish(); // close current instance
+            finish(); // close current instance
             startActivity(intent); // start it fresh
                 });
 
@@ -190,6 +190,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                     Intent intent = new Intent(ActiveCalibrationActivity.this, WarningActivity.class);
                     intent.putStringArrayListExtra("warnings", warningList);
                     startActivity(intent);
+                    finish();
                 }
             });
             builder.setNegativeButton("No", new DialogInterface.OnClickListener()
@@ -204,6 +205,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                     counter = 0;
                     Intent intent = new Intent(ActiveCalibrationActivity.this, CalibrationActivity.class);
                     startActivity(intent);
+                    finish();
                 }
             });
             builder.create();

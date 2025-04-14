@@ -35,7 +35,7 @@ public class CalibrationActivity extends AppCompatActivity {
             // Move to another activity for camera activation
             Intent intent = new Intent(CalibrationActivity.this, ActiveCalibrationActivity.class);
             startActivity(intent);
-            //finish();
+            finish();
         });
 
         // Initialize camera executor for background thread
