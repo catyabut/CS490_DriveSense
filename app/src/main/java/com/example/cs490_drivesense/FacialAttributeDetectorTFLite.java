@@ -49,7 +49,7 @@ public class FacialAttributeDetectorTFLite {
     public boolean liveness;
     public boolean glasses;
     public boolean mask;
-    public boolean isCalibrating = true;
+    public boolean setEmbedding = true;
 
     private Interpreter tfliteInterpreter;
 
@@ -79,9 +79,10 @@ public class FacialAttributeDetectorTFLite {
 
         // Postprocess raw outputs
 
-        if (isCalibrating)
+        if (setEmbedding)
         {
             setOriginalEmbedding(rawOutputs); // Original embedding created upon calibration
+            setEmbedding = false;
         }
         setCurrentEmbedding(rawOutputs); // Set current embedding
 

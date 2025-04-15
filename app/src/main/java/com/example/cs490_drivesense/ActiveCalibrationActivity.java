@@ -165,6 +165,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             isCalibrationComplete = false;
             isPostCalibLayoutRdy = false;
             counter = 0;
+            facialAttributeDetector.setEmbedding = true; // To overwrite liveness embedding with new value
             finish(); // close current instance
             startActivity(intent); // start it fresh
                 });
@@ -187,6 +188,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                     isPostCalibLayoutRdy = false; // Layout will not be ready in next session
                     isNewSession = true; // Clear waring list for next session
                     counter = 0;
+                    facialAttributeDetector.setEmbedding = true; // To overwrite liveness embedding with new value
                     Intent intent = new Intent(ActiveCalibrationActivity.this, WarningActivity.class);
                     intent.putStringArrayListExtra("warnings", warningList);
                     startActivity(intent);
@@ -204,6 +206,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                     isPostCalibLayoutRdy = false; // Layout will not be ready in next session
                     isNewSession = true; // Clear waring list for next session
                     counter = 0;
+                    facialAttributeDetector.setEmbedding = true; // To overwrite liveness embedding with new value
                     Intent intent = new Intent(ActiveCalibrationActivity.this, CalibrationActivity.class);
                     startActivity(intent);
                     finish();
@@ -496,14 +499,14 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 //        Log.d("FaceDetectionResults", "Face Detected: " + faceDetectionResults.faceDetected);
 ////
 ////        // Display results for attributes
-        TextView eyeOpennessText = findViewById(R.id.eyeOpennessText);
-        TextView livenessText = findViewById(R.id.livenessText);
+//        TextView eyeOpennessText = findViewById(R.id.eyeOpennessText);
+//        TextView livenessText = findViewById(R.id.livenessText);
 ////        TextView glassesText = findViewById(R.id.glassesText);
 ////        TextView maskText = findViewById(R.id.maskText);
 ////        TextView sunglassesText = findViewById(R.id.sunglassesText);
 //
-        eyeOpennessText.setText("Eye Openness: " + (!attributeResults.eyeOpenness ? "True" : "False"));
-        livenessText.setText("Liveness: " + (attributeResults.liveness ? "True" : "False"));
+//        eyeOpennessText.setText("Eye Openness: " + (!attributeResults.eyeOpenness ? "True" : "False"));
+//        livenessText.setText("Liveness: " + (attributeResults.liveness ? "True" : "False"));
 //        glassesText.setText("Glasses: " + (attributeResults.glasses ? "True" : "False"));
 //        maskText.setText("Mask: " + (attributeResults.mask ? "True" : "False"));
 //        sunglassesText.setText("Sunglasses: " + (attributeResults.sunglasses ? "True" : "False"));

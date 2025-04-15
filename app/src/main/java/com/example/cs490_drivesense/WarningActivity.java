@@ -13,7 +13,12 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.List;
 
 public class WarningActivity extends AppCompatActivity {
 
@@ -68,6 +73,7 @@ public class WarningActivity extends AppCompatActivity {
             // Move back to calibration screen
             Intent intent = new Intent(WarningActivity.this, ActiveCalibrationActivity.class);
             startActivity(intent);
+            finish();
         });
 
     }
@@ -75,6 +81,17 @@ public class WarningActivity extends AppCompatActivity {
     void exportWarningsToFile(ArrayList<String> warninglist)
     {
         // Creates a .txt file using the warnings
-
+        try (PrintWriter pw = new PrintWriter(new FileOutputStream("WarningLog.txt", true))) {
+            // Output each warning to a text file
+            for (String warning : warningList)
+            {
+                pw.println(warning);
+                pw.println("\n");
+            }
+            Log.d("Export Warnings", "Output Written to file");
+        } catch (FileNotFoundException e) {
+            Log.e("Export Warnings", "ERROR: Text file not found");
+            throw new RuntimeException(e);
+        }
     }
 }
