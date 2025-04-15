@@ -1,10 +1,12 @@
 package com.example.cs490_drivesense;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
@@ -13,10 +15,12 @@ import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,18 +84,35 @@ public class WarningActivity extends AppCompatActivity {
 
     void exportWarningsToFile(ArrayList<String> warninglist)
     {
-        // Creates a .txt file using the warnings
-        try (PrintWriter pw = new PrintWriter(new FileOutputStream("WarningLog.txt", true))) {
-            // Output each warning to a text file
+        // Get File path for WarningLog.txt
+        File path = getApplicationContext().getFilesDir();
+        String fileName = "WarningLog-";
+        SessionTimer sTimer = new SessionTimer();
+        ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
+        String timeStr = sTimer.getTimeStr(timeOfWarning);
+        fileName += timeStr;
+        try
+        {
+            // Creates a .txt file using the warnings
+            FileOutputStream writer = new FileOutputStream(new File(path, fileName));
             for (String warning : warningList)
             {
-                pw.println(warning);
-                pw.println("\n");
+                // Write to the text file
+                writer.write(warning.getBytes());
+                writer.write("\n".getBytes());
             }
-            Log.d("Export Warnings", "Output Written to file");
-        } catch (FileNotFoundException e) {
-            Log.e("Export Warnings", "ERROR: Text file not found");
+            writer.close();
+            Log.d("Export Warnings", "Warnings written to file");
+            Toast.makeText(getApplication(), "Wrote to file: " + fileName, Toast.LENGTH_SHORT).show();
+        }
+        // Handle any errors
+        catch (FileNotFoundException e) {
+            Log.e("Export Warnings", "File was not found");
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            Log.e("Export Warnings", "Could not write to file " + fileName);
             throw new RuntimeException(e);
         }
     }
+
 }

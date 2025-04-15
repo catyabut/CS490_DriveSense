@@ -161,14 +161,34 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         //Recalibrate Button Functionality
         ImageButton recalibrateButton = findViewById(R.id.recalibrateButton);
         recalibrateButton.setOnClickListener(view -> {
-            Intent intent = getIntent();
-            isCalibrationComplete = false;
-            isPostCalibLayoutRdy = false;
-            counter = 0;
-            facialAttributeDetector.setEmbedding = true; // To overwrite liveness embedding with new value
-            finish(); // close current instance
-            startActivity(intent); // start it fresh
-                });
+            // Create popup to ask user if they want to see the warning log
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Recalibrate?");
+            builder.setMessage("Would you like to Recalibrate the system?");
+            builder.setPositiveButton("Yes", new DialogInterface.OnClickListener()
+            {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    // Yes button should go back to calibration screen
+                    Intent intent = getIntent();
+                    isCalibrationComplete = false;
+                    isPostCalibLayoutRdy = false;
+                    counter = 0;
+                    facialAttributeDetector.setEmbedding = true; // To overwrite liveness embedding with new value
+                    finish(); // close current instance
+                    startActivity(intent); // start it fresh
+                }
+            });
+            builder.setNegativeButton("No", new DialogInterface.OnClickListener()
+            {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    // No button wont do anything
+                }
+            });
+            builder.create();
+            builder.show();
+        });
 
 
         Button doneButton = findViewById(R.id.DoneButton);
