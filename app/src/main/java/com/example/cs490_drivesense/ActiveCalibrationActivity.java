@@ -478,9 +478,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 //        }
 
 //        // Check if the results are being passed correctly
-//        Log.d("FacialAttributes", "Eye Openness Left: " + !attributeResults.eyeClosenessL);
-//        Log.d("FacialAttributes", "Eye Openness Right: " + !attributeResults.eyeClosenessR);
-//        Log.d("FacialAttributes", "Liveness: " + attributeResults.liveness);
+        Log.d("FacialAttributes", "Eye Openness Left: " + !attributeResults.eyeOpenness);
+        Log.d("FacialAttributes", "Liveness: " + attributeResults.liveness);
 //        Log.d("FacialAttributes", "Glasses: " + attributeResults.glasses);
 //        Log.d("FacialAttributes", "Sunglasses: " + attributeResults.sunglasses);
 //        Log.d("FacialAttributes", "Mask: " + attributeResults.mask);
@@ -497,14 +496,14 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 //        Log.d("FaceDetectionResults", "Face Detected: " + faceDetectionResults.faceDetected);
 ////
 ////        // Display results for attributes
-////        TextView eyeOpennessText = findViewById(R.id.eyeOpennessText);
-////        TextView livenessText = findViewById(R.id.livenessText);
+        TextView eyeOpennessText = findViewById(R.id.eyeOpennessText);
+        TextView livenessText = findViewById(R.id.livenessText);
 ////        TextView glassesText = findViewById(R.id.glassesText);
 ////        TextView maskText = findViewById(R.id.maskText);
 ////        TextView sunglassesText = findViewById(R.id.sunglassesText);
 //
-//        eyeOpennessText.setText("Eye Openness: Left: " + (!attributeResults.eyeClosenessL ? "True" : "False") + ", Right: " + (!attributeResults.eyeClosenessR ? "True" : "False"));
-//        livenessText.setText("Liveness: " + (attributeResults.liveness ? "True" : "False"));
+        eyeOpennessText.setText("Eye Openness: " + (!attributeResults.eyeOpenness ? "True" : "False"));
+        livenessText.setText("Liveness: " + (attributeResults.liveness ? "True" : "False"));
 //        glassesText.setText("Glasses: " + (attributeResults.glasses ? "True" : "False"));
 //        maskText.setText("Mask: " + (attributeResults.mask ? "True" : "False"));
 //        sunglassesText.setText("Sunglasses: " + (attributeResults.sunglasses ? "True" : "False"));

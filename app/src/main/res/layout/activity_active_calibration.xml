@@ -31,21 +31,21 @@
             android:gravity="center"
             android:padding="10dp"/>
 
-<!--        <TextView-->
-<!--            android:id="@+id/eyeOpennessText"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="Eye Openness: "-->
-<!--            android:textColor="#FFFFFF"-->
-<!--            android:textSize="16sp" />-->
+        <TextView
+            android:id="@+id/eyeOpennessText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Eye Openness: "
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
 
-<!--        <TextView-->
-<!--            android:id="@+id/livenessText"-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:text="Liveness: "-->
-<!--            android:textColor="#FFFFFF"-->
-<!--            android:textSize="16sp" />-->
+        <TextView
+            android:id="@+id/livenessText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Liveness: "
+            android:textColor="#FFFFFF"
+            android:textSize="16sp" />
 
 <!--        <TextView-->
 <!--            android:id="@+id/glassesText"-->
