@@ -22,7 +22,9 @@
                 android:id="@+id/warningsTextView"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:textSize="16sp"
+                android:text="WARNING!"
+                android:textAlignment="center"
+                android:textSize="64sp"
                 android:textColor="#000000" />
         </ScrollView>
 

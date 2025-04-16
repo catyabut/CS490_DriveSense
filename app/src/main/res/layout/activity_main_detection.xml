@@ -9,7 +9,7 @@
     <androidx.camera.view.PreviewView
         android:id="@+id/previewViewAC"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="match_parent"x
         android:visibility="gone"/> <!-- Hidden initially -->
 
     <!-- Face Bounding Box & Landmark Overlay -->
