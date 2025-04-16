@@ -833,11 +833,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             // Generate a warning message
             SessionTimer sTimer = new SessionTimer();
             Log.e("Eyecloseness detection", "Return true ratio greater than .80");
-            String warningMsg = "WARNING! Time: ";
+            String warningMsg = "WARNING!\n Time: ";
             ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
             String timeStr = sTimer.getTimeStr(timeOfWarning);
             warningMsg += timeStr;
-            warningMsg += " Cause: Eyes are closed!";
+            warningMsg += " \nCause: Eyes are closed!";
             warningList.add(warningMsg);
             return true; // Eyecloseness detected
         }
@@ -881,11 +881,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             // Generate a warning message
             SessionTimer sTimer = new SessionTimer();
             Log.e("Liveness detection", "Return true ratio greater than .80");
-            String warningMsg = "WARNING! Time: ";
+            String warningMsg = "WARNING!\n Time: ";
             ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
             String timeStr = sTimer.getTimeStr(timeOfWarning);
             warningMsg += timeStr;
-            warningMsg += " Cause: Liveness false!";
+            warningMsg += " \nCause: Liveness false!";
             warningList.add(warningMsg);
             return false; // Liveness not detected
         }
@@ -982,11 +982,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         if (deviating)
         {
             // Create a warning message if driver deviates with time and cause
-            String warningMsg = "WARNING! Time: ";
+            String warningMsg = "WARNING!\n Time: ";
             ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
             String timeStr = sTimer.getTimeStr(timeOfWarning);
             warningMsg += timeStr;
-            warningMsg += " Cause: ";
+            warningMsg += " \nCause: ";
             // Turning Left
             if (results.noseTipX > neutral.noseTipX)
             {
