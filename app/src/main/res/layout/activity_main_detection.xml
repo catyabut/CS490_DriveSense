@@ -66,13 +66,11 @@
 
     </LinearLayout>
 
-    <LinearLayout
+    <RelativeLayout
         android:id="@+id/buttonLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
-        android:orientation="horizontal"
-        android:gravity="center"
         android:padding="16dp"
         android:background="@android:color/white">
 
@@ -81,14 +79,18 @@
             android:id="@+id/cameraToggleButton"
             android:layout_width="64dp"
             android:layout_height="64dp"
+            android:layout_centerHorizontal="true"
             android:src="@drawable/ic_camera"
             android:background="@android:color/transparent"
             android:contentDescription="Toggle Camera"/>
 
         <ImageButton
             android:id="@+id/recalibrateButton"
-            android:layout_width="56dp"
-            android:layout_height="56dp"
+            android:layout_width="45dp"
+            android:layout_height="45dp"
+            android:layout_toRightOf="@id/cameraToggleButton"
+            android:layout_marginStart="32dp"
+            android:layout_marginTop="9dp"
             android:src="@drawable/ic_recalibrate"
             android:scaleType="centerInside"
             android:background="@android:color/transparent"
@@ -96,7 +98,7 @@
 
         <!-- Spacer between buttons -->
 
-    </LinearLayout>
+    </RelativeLayout>
 
     <!-- Top Button Container for 'Done' -->
     <LinearLayout

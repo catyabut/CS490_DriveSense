@@ -83,7 +83,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private boolean isCurrentlyDeviating = false;   // deviation from neutral used in active session
     private boolean isCurrentlyClosingEyes = false; // eyecloseness check used in active session
     private boolean isCurrentlyNotLive = false;     // liveness check used in active session
-    private static final long DEVIATION_THRESHOLD_MS = 5000; //5 seconds
+    private static final long DEVIATION_THRESHOLD_MS = 3000; //5 seconds
     private static final long EYECLOSENESS_THRESHOLD_MS = 2000; // 2 seconds
     private static final long LIVENESS_THRESHOLD_MS = 2000; // 2 seconds
     private static boolean wearingMask = false; // Set during calibration, for use in active session to check the mask
@@ -161,13 +161,34 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         //Recalibrate Button Functionality
         ImageButton recalibrateButton = findViewById(R.id.recalibrateButton);
         recalibrateButton.setOnClickListener(view -> {
-            Intent intent = getIntent();
-            isCalibrationComplete = false;
-            isPostCalibLayoutRdy = false;
-            counter = 0;
-            finish(); // close current instance
-            startActivity(intent); // start it fresh
-                });
+            // Create popup to ask user if they want to see the warning log
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setTitle("Recalibrate?");
+            builder.setMessage("Would you like to Recalibrate the system?");
+            builder.setPositiveButton("Yes", new DialogInterface.OnClickListener()
+            {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    // Yes button should go back to calibration screen
+                    Intent intent = getIntent();
+                    isCalibrationComplete = false;
+                    isPostCalibLayoutRdy = false;
+                    counter = 0;
+                    facialAttributeDetector.setEmbedding = true; // To overwrite liveness embedding with new value
+                    finish(); // close current instance
+                    startActivity(intent); // start it fresh
+                }
+            });
+            builder.setNegativeButton("No", new DialogInterface.OnClickListener()
+            {
+                @Override
+                public void onClick(DialogInterface dialogInterface, int i) {
+                    // No button wont do anything
+                }
+            });
+            builder.create();
+            builder.show();
+        });
 
 
         Button doneButton = findViewById(R.id.DoneButton);
@@ -187,9 +208,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                     isPostCalibLayoutRdy = false; // Layout will not be ready in next session
                     isNewSession = true; // Clear waring list for next session
                     counter = 0;
+                    facialAttributeDetector.setEmbedding = true; // To overwrite liveness embedding with new value
                     Intent intent = new Intent(ActiveCalibrationActivity.this, WarningActivity.class);
                     intent.putStringArrayListExtra("warnings", warningList);
                     startActivity(intent);
+                    unbindCamera();
                     finish();
                 }
             });
@@ -203,6 +226,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                     isPostCalibLayoutRdy = false; // Layout will not be ready in next session
                     isNewSession = true; // Clear waring list for next session
                     counter = 0;
+                    facialAttributeDetector.setEmbedding = true; // To overwrite liveness embedding with new value
                     Intent intent = new Intent(ActiveCalibrationActivity.this, CalibrationActivity.class);
                     startActivity(intent);
                     finish();
@@ -477,9 +501,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 //        }
 
 //        // Check if the results are being passed correctly
-//        Log.d("FacialAttributes", "Eye Openness Left: " + !attributeResults.eyeClosenessL);
-//        Log.d("FacialAttributes", "Eye Openness Right: " + !attributeResults.eyeClosenessR);
-//        Log.d("FacialAttributes", "Liveness: " + attributeResults.liveness);
+        Log.d("FacialAttributes", "Eye Openness Left: " + !attributeResults.eyeOpenness);
+        Log.d("FacialAttributes", "Liveness: " + attributeResults.liveness);
 //        Log.d("FacialAttributes", "Glasses: " + attributeResults.glasses);
 //        Log.d("FacialAttributes", "Sunglasses: " + attributeResults.sunglasses);
 //        Log.d("FacialAttributes", "Mask: " + attributeResults.mask);
@@ -496,13 +519,13 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 //        Log.d("FaceDetectionResults", "Face Detected: " + faceDetectionResults.faceDetected);
 ////
 ////        // Display results for attributes
-////        TextView eyeOpennessText = findViewById(R.id.eyeOpennessText);
-////        TextView livenessText = findViewById(R.id.livenessText);
+//        TextView eyeOpennessText = findViewById(R.id.eyeOpennessText);
+//        TextView livenessText = findViewById(R.id.livenessText);
 ////        TextView glassesText = findViewById(R.id.glassesText);
 ////        TextView maskText = findViewById(R.id.maskText);
 ////        TextView sunglassesText = findViewById(R.id.sunglassesText);
 //
-//        eyeOpennessText.setText("Eye Openness: Left: " + (!attributeResults.eyeClosenessL ? "True" : "False") + ", Right: " + (!attributeResults.eyeClosenessR ? "True" : "False"));
+//        eyeOpennessText.setText("Eye Openness: " + (!attributeResults.eyeOpenness ? "True" : "False"));
 //        livenessText.setText("Liveness: " + (attributeResults.liveness ? "True" : "False"));
 //        glassesText.setText("Glasses: " + (attributeResults.glasses ? "True" : "False"));
 //        maskText.setText("Mask: " + (attributeResults.mask ? "True" : "False"));
@@ -530,6 +553,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 //        leftEarText.setText("Left Ear (X, Y): " + " (" + faceDetectionResults.leftEarTragionX + ", " + faceDetectionResults.leftEarTragionY);
 
         TextView calibrationStatusText = findViewById(R.id.calibrationStatusText);
+
+        if (calibrationStatusText == null) {
+            Log.e("updateAttributesUI", "calibrationStatusText is null! Skipping UI update.");
+            return;
+        }
 
         if (counter < CALIBRATION_FRAME_COUNT) {
             calibrationStatusText.setText("Calibrating... Hold still.");
@@ -986,6 +1014,16 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             warningList.add(warningMsg); // Append the warning to the list
         }
         return deviating;
+    }
+
+    private void unbindCamera() {
+        try {
+            ProcessCameraProvider cameraProvider = ProcessCameraProvider.getInstance(this).get();
+            cameraProvider.unbindAll();
+            Log.d("ActiveCalibration", "Camera unbound before activity closed.");
+        } catch (Exception e) {
+            Log.e("ActiveCalibration", "Error unbinding camera", e);
+        }
     }
 
 //    private void drawFaceBox(MediaPipeFaceDetectionData faceData, Bitmap inputBitmap) {

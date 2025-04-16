@@ -27,7 +27,7 @@ public class FacialAttributeDetectorTFLite {
     private static final int INPUT_SIZE = 128; // Adjust to your model input size
     private static final int NUM_CHANNELS = 3; // RGB
     private static final int OUTPUT_SIZE = 6; // Adjust based on model output
-    private static final double EYE_OPENNESS_MIN_THRESHOLD = 0.50;
+    private static final double EYE_OPENNESS_MIN_THRESHOLD = 0.25;
     private static final double GLASSES_MIN_THRESHOLD = 0.80;
     private static final double SUNGLASSES_MIN_THRESHOLD = 0.80;
     private static final double MASK_MIN_THRESHOLD = 0.80;
@@ -49,7 +49,7 @@ public class FacialAttributeDetectorTFLite {
     public boolean liveness;
     public boolean glasses;
     public boolean mask;
-    public boolean isCalibrating = true;
+    public boolean setEmbedding = true;
 
     private Interpreter tfliteInterpreter;
 
@@ -79,9 +79,10 @@ public class FacialAttributeDetectorTFLite {
 
         // Postprocess raw outputs
 
-        if (isCalibrating)
+        if (setEmbedding)
         {
             setOriginalEmbedding(rawOutputs); // Original embedding created upon calibration
+            setEmbedding = false;
         }
         setCurrentEmbedding(rawOutputs); // Set current embedding
 
