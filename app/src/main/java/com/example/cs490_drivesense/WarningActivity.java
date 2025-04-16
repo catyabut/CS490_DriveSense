@@ -1,7 +1,10 @@
 package com.example.cs490_drivesense;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.Button;
@@ -9,6 +12,9 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.result.ActivityResult;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.graphics.Insets;
@@ -19,10 +25,12 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class WarningActivity extends AppCompatActivity {
 
@@ -84,35 +92,84 @@ public class WarningActivity extends AppCompatActivity {
 
     void exportWarningsToFile(ArrayList<String> warninglist)
     {
-        // Get File path for WarningLog.txt
-        File path = getApplicationContext().getFilesDir();
+        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT); // Create a new .txt file
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("text/plain");
+        // Name of file is WarningLog-TimeofExport so each file has a unique name
         String fileName = "WarningLog-";
         SessionTimer sTimer = new SessionTimer();
         ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
         String timeStr = sTimer.getTimeStr(timeOfWarning);
         fileName += timeStr;
-        try
+        intent.putExtra(Intent.EXTRA_TITLE, fileName);
+        startActivityForResult(intent, 1);
+
+//        // Get File path for WarningLog.txt
+//        File path = getApplicationContext().getFilesDir();
+//        // Name of file is WarningLog-TimeofExport so each file has a unique name
+//        String fileName = "WarningLog-";
+//        SessionTimer sTimer = new SessionTimer();
+//        ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
+//        String timeStr = sTimer.getTimeStr(timeOfWarning);
+//        fileName += timeStr;
+//        try
+//        {
+//            // Creates a .txt file using the warnings
+//            FileOutputStream writer = new FileOutputStream(new File(path, fileName));
+//            for (String warning : warningList)
+//            {
+//                // Write to the text file
+//                writer.write(warning.getBytes());
+//                writer.write("\n".getBytes());
+//            }
+//            writer.close();
+//            Log.d("Export Warnings", "Warnings written to file");
+//            Toast.makeText(getApplication(), "Wrote to file: " + fileName, Toast.LENGTH_SHORT).show();
+//        }
+//        // Handle any errors
+//        catch (FileNotFoundException e) {
+//            Log.e("Export Warnings", "File was not found");
+//            throw new RuntimeException(e);
+//        } catch (IOException e) {
+//            Log.e("Export Warnings", "Could not write to file " + fileName);
+//            throw new RuntimeException(e);
+//        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data)
+    {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == 1)
         {
-            // Creates a .txt file using the warnings
-            FileOutputStream writer = new FileOutputStream(new File(path, fileName));
-            for (String warning : warningList)
+            if (resultCode == RESULT_OK)
             {
-                // Write to the text file
-                writer.write(warning.getBytes());
-                writer.write("\n".getBytes());
+                try {
+                    Uri uri = data.getData();
+                    OutputStream outputStream = getContentResolver().openOutputStream(uri);
+                    for (String warning : warningList)
+                    {
+                        // Write to the text file
+                        outputStream.write(warning.getBytes());
+                        outputStream.write("\n".getBytes());
+                    }
+                    outputStream.close();
+                    Toast.makeText(getApplication(), "Wrote to file", Toast.LENGTH_SHORT).show();
+                } catch (FileNotFoundException e) {
+                    Log.e("Export File", "File not found");
+                    throw new RuntimeException(e);
+                } catch (IOException e) {
+                    Log.e("Export File", "Could not use outputstream");
+                    throw new RuntimeException(e);
+                }
+
             }
-            writer.close();
-            Log.d("Export Warnings", "Warnings written to file");
-            Toast.makeText(getApplication(), "Wrote to file: " + fileName, Toast.LENGTH_SHORT).show();
-        }
-        // Handle any errors
-        catch (FileNotFoundException e) {
-            Log.e("Export Warnings", "File was not found");
-            throw new RuntimeException(e);
-        } catch (IOException e) {
-            Log.e("Export Warnings", "Could not write to file " + fileName);
-            throw new RuntimeException(e);
+            else
+            {
+                Toast.makeText(getApplication(), "File was not saved", Toast.LENGTH_SHORT).show();
+            }
         }
     }
+
 
 }
