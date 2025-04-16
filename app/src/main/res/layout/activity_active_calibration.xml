@@ -1,43 +1,60 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/white">
 
     <!-- Camera Preview (Background) -->
 
     <!-- Overlay for Facial Attributes (UI Overlay) -->
     <androidx.camera.view.PreviewView
         android:id="@+id/previewView"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_width="375dp"
+        android:layout_height="600dp"
+        android:layout_gravity="center"
+        android:layout_marginBottom="40dp"
+        android:background="@color/black">
+
+        <com.example.cs490_drivesense.FaceOverlayView
+            android:id="@+id/faceOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:background="@android:color/transparent" />
+    </androidx.camera.view.PreviewView>
 
     <LinearLayout
         android:id="@+id/resultsLayout"
         android:layout_width="match_parent"
         android:layout_height="437dp"
         android:layout_gravity="top"
+        android:layout_marginTop="40dp"
+        android:layout_marginLeft="10dp"
         android:background="@android:color/transparent"
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
-            android:id="@+id/calibrationStatusText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Calibration Status: Initializing..."
-            android:textColor="#FFFF00"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:padding="10dp"/>
+<!--        <TextView-->
+<!--            android:id="@+id/calibrationStatusText"-->
+<!--            android:layout_width="match_parent"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:layout_gravity="bottom"-->
+<!--            android:text="Calibration Status: Initializing..."-->
+<!--            android:textColor="#000000"-->
+<!--            android:textSize="18sp"-->
+<!--            android:textStyle="bold"-->
+<!--            android:gravity="center"-->
+<!--            android:padding="16dp"-->
+<!--            android:background="@color/white"-->
+<!--            />-->
 
-        <TextView
-            android:id="@+id/eyeOpennessText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Eye Openness: "
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
+<!--        <TextView-->
+<!--            android:id="@+id/eyeOpennessText"-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:text="Eye Openness: "-->
+<!--            android:textColor="#FFFFFF"-->
+<!--            android:textSize="16sp" />-->
 
         <TextView
             android:id="@+id/livenessText"
@@ -143,11 +160,20 @@
 <!--            android:textColor="#FFFFFF"-->
 <!--            android:textSize="16sp" />-->
     </LinearLayout>
-    <!-- Face Bounding Box & Landmark Overlay -->
-    <com.example.cs490_drivesense.FaceOverlayView
-        android:id="@+id/faceOverlay"
+
+    <TextView
+        android:id="@+id/calibrationStatusText"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_gravity="center"
-        android:background="@android:color/transparent" />
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="35dp"
+        android:text="Calibration Status: Initializing..."
+        android:textColor="#000000"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        android:gravity="center"
+        android:padding="16dp"
+        android:background="@color/white"
+        />
+    <!-- Face Bounding Box & Landmark Overlay -->
 </FrameLayout>
