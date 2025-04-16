@@ -207,7 +207,7 @@ public class FacialAttributeDetectorTFLite {
         current.flip();  // Set pos to 0
 
         // For each element of both embeddings
-        while (current.hasRemaining())
+        while (original.hasRemaining())
         {
             // Find their difference squared
             double y_true = original.get();
