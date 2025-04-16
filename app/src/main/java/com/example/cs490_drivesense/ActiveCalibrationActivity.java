@@ -833,7 +833,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             // Generate a warning message
             SessionTimer sTimer = new SessionTimer();
             Log.e("Eyecloseness detection", "Return true ratio greater than .80");
-            String warningMsg = "WARNING!\n Time: ";
+            String warningMsg = "\nWARNING!\n Time:";
             ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
             String timeStr = sTimer.getTimeStr(timeOfWarning);
             warningMsg += timeStr;
@@ -881,7 +881,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             // Generate a warning message
             SessionTimer sTimer = new SessionTimer();
             Log.e("Liveness detection", "Return true ratio greater than .80");
-            String warningMsg = "WARNING!\n Time: ";
+            String warningMsg = "\nWARNING!\n Time:";
             ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
             String timeStr = sTimer.getTimeStr(timeOfWarning);
             warningMsg += timeStr;
@@ -982,7 +982,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         if (deviating)
         {
             // Create a warning message if driver deviates with time and cause
-            String warningMsg = "WARNING!\n Time: ";
+            String warningMsg = "\nWARNING!\n Time:";
             ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
             String timeStr = sTimer.getTimeStr(timeOfWarning);
             warningMsg += timeStr;

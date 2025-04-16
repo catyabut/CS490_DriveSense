@@ -25,7 +25,6 @@
                 android:layout_height="wrap_content"
                 android:text="WARNING!"
                 android:textAlignment="center"
-                android:textSize="64sp"
                 android:textColor="#000000" />
         </ScrollView>
 
