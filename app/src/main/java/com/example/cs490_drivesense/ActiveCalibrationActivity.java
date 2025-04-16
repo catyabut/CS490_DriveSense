@@ -83,7 +83,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private boolean isCurrentlyDeviating = false;   // deviation from neutral used in active session
     private boolean isCurrentlyClosingEyes = false; // eyecloseness check used in active session
     private boolean isCurrentlyNotLive = false;     // liveness check used in active session
-    private static final long DEVIATION_THRESHOLD_MS = 5000; //5 seconds
+    private static final long DEVIATION_THRESHOLD_MS = 3000; //5 seconds
     private static final long EYECLOSENESS_THRESHOLD_MS = 2000; // 2 seconds
     private static final long LIVENESS_THRESHOLD_MS = 2000; // 2 seconds
     private static boolean wearingMask = false; // Set during calibration, for use in active session to check the mask
