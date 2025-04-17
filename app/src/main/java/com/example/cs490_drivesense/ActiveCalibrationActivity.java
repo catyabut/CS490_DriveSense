@@ -990,25 +990,25 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             // Turning Left
             if (results.noseTipX > neutral.noseTipX)
             {
-                warningMsg += "Driver looking Left!";
+                warningMsg += "Driver looking Left! ";
                 Log.e("WARNING!", timeStr + ": Driver looking Left! ");
             }
             // Turning Right
             if (results.noseTipX < neutral.noseTipX)
             {
-                warningMsg += "Driver looking Right!";
+                warningMsg += "Driver looking Right! ";
                 Log.e("WARNING!", timeStr + ": Driver looking Right! ");
             }
             // Looking Up
             if (results.noseTipY < neutral.noseTipY)
             {
-                warningMsg += "Driver looking Up!";
+                warningMsg += "Driver looking Up! ";
                 Log.e("WARNING!", timeStr + ": Driver looking Up! ");
             }
             // Looking Down
             if (results.noseTipY > neutral.noseTipY)
             {
-                warningMsg += "Driver looking Down!";
+                warningMsg += "Driver looking Down! ";
                 Log.e("WARNING!", timeStr + ": Driver looking Down! ");
             }
             warningList.add(warningMsg); // Append the warning to the list
