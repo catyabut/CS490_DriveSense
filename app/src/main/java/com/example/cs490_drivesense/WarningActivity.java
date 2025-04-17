@@ -83,7 +83,7 @@ public class WarningActivity extends AppCompatActivity {
         // Done button should go back to calibration screen
         doneButton.setOnClickListener(view -> {
             // Move back to calibration screen
-            Intent intent = new Intent(WarningActivity.this, ActiveCalibrationActivity.class);
+            Intent intent = new Intent(WarningActivity.this, CalibrationActivity.class);
             startActivity(intent);
             finish();
         });
