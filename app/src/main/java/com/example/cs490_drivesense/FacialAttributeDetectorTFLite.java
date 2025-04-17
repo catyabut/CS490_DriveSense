@@ -203,8 +203,10 @@ public class FacialAttributeDetectorTFLite {
         FloatBuffer original = this.originalLivenessEmbedding;
         FloatBuffer current = this.currentLivenessEmbedding;
 
-        original.flip(); // Set pos to 0
-        current.flip();  // Set pos to 0
+        //original.flip(); // Set pos to 0
+        //current.flip();  // Set pos to 0
+        original.rewind();
+        current.rewind();
 
         // For each element of both embeddings
         while (original.hasRemaining())

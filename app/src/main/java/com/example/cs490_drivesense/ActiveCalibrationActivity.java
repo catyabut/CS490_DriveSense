@@ -851,7 +851,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     // Function to check if liveness was detected the last X results returns boolean for use in active session
     public boolean livenessDetectedXTimes(FacialAttributeData[] history)
     {
-        int positives = 0; // Used to get ratio of positive detections
+        int trueLivenessCount = 0; // Used to get ratio of positive detections
         int total = history.length;
 
         // History should not be empty
@@ -863,13 +863,13 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         // For each recorded result
         for (int i = 0; i < history.length; i++) {
             // Result is false count it
-            if (!history[i].liveness)
+            if (history[i].liveness)
             {
-                positives += 1;
+                trueLivenessCount += 1;
             }
         }
 
-        double ratio = positives / total; // ratio of true detections over lastXResults
+        double ratio = trueLivenessCount / total; // ratio of true detections over lastXResults
 
         // If true detections exceed the threshold
         if (ratio > MIN_ATTRIBUTE_THRESHOLD)
