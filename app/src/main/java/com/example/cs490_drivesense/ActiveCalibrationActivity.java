@@ -80,7 +80,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private static final double NOSE_DEVIATION_X_LEFT_THRESHOLD = 25.0;
     private static final double NOSE_DEVIATION_X_RIGHT_THRESHOLD = 80.0;
     private static final double NOSE_DEVIATION_Y_DOWN_THRESHOLD = 65.0;
-    private static final double NOSE_DEVIATION_Y_UP_THRESHOLD = 20.0;
+    private static final double NOSE_DEVIATION_Y_UP_THRESHOLD = 10.0;
     private long deviationStartTime = 0;
     private long eyeClosenessStartTime = 0;
     private long livenessStartTime = 0;
