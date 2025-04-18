@@ -32,7 +32,7 @@ public class FacialAttributeDetectorTFLite {
     private static final double SUNGLASSES_MIN_THRESHOLD = 0.80;
     private static final double MASK_MIN_THRESHOLD = 0.80;
     private static final double LIVENESS_MAX_THRESHOLD = 10;
-    private static final int MAX_DETECTION_DATA = 10; //max number of previous facial attribute data
+    private static final int MAX_DETECTION_DATA = 15; //max number of previous facial attribute data
 
 
     private Map<Integer, Object> rawOutputs;

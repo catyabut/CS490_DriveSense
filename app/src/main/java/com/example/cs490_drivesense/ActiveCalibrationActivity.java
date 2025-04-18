@@ -78,9 +78,9 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private static final int CALIBRATION_FRAME_COUNT = 20; //To change the max frames needed for checking neutral position
     private static final double MAX_DEVIATION_THRESHOLD = 8.0; // Used to tell if driver deviates from neutral
     private static final double NOSE_DEVIATION_X_LEFT_THRESHOLD = 25.0;
-    private static final double NOSE_DEVIATION_X_RIGHT_THRESHOLD = 80.0;
+    private static final double NOSE_DEVIATION_X_RIGHT_THRESHOLD = 60.0;
     private static final double NOSE_DEVIATION_Y_DOWN_THRESHOLD = 65.0;
-    private static final double NOSE_DEVIATION_Y_UP_THRESHOLD = 10.0;
+    private static final double NOSE_DEVIATION_Y_UP_THRESHOLD = 4.0;
     private long deviationStartTime = 0;
     private long eyeClosenessStartTime = 0;
     private long livenessStartTime = 0;
@@ -93,6 +93,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private static boolean wearingMask = false; // Set during calibration, for use in active session to check the mask
     private static boolean wearingSunglasses = false; // Set during calibration, if true user should be told to take sunglasses off
     private static final double MIN_ATTRIBUTE_THRESHOLD = 0.8; // 80% of attribute detections should be true when checking last X results
+    private static final double MIN_EYECLOSENESS_THRESHOLD = 0.75;
 
     private MediaPlayer mediaPlayer;
     private LinearLayout resultsLayout; //Declare resultsLayout
@@ -325,7 +326,6 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                 boolean faceDetectedAllResults = this.faceDetectedXTimes(faceDetector.lastXResults); // Check last X positions for extreme movement
                                 //wearingSunglasses = this.sunglassesDetectedXTimes(facialAttributeDetector.lastXResults); // Check last X results for sunglasses
                                 wearingSunglasses = false; // Force sunglasses false for now detection not working correctly
-                                wearingMask = this.maskDetectedXTimes(facialAttributeDetector.lastXResults); // Check last X results for mask
                                 // Check if user moved
                                 if (faceDetectedAllResults)
                                 {
@@ -366,8 +366,13 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                     return;
                                 }
 
+                                boolean eyeClosenessLastXResults = false; // Only check eyes when user is not deviating
+
                                 boolean deviating = isDeviatingFromNeutral(faceDetectionResults, neutral); // check if driver deviates from neutral
-                                boolean eyeClosenessLastXResults = eyeClosenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if eyeCloseness is above the threshold for last X results (default is 80%)
+                                if (!deviating)
+                                {
+                                    eyeClosenessLastXResults = eyeClosenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if eyeCloseness is above the threshold for last X results (default is 80%)
+                                }
                                 boolean livenessLastXResults = livenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if liveness is above the threshold for last X results
 
                                 // First check is deviation from neutral
@@ -771,45 +776,12 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         }
     }
 
-    // Function to check if mask was detected the last X results returns boolean for use in active session
-    public boolean maskDetectedXTimes(FacialAttributeData[] history)
-    {
-        int positives = 0; // Used to get ratio of positive detections
-        int total = history.length;
-
-        // History should not be empty
-        if (history == null) {
-            Log.e("Calibration", "maskDetectedXTimes: history array is null!");
-            return false;
-        }
-
-        // For each recorded result
-        for (int i = 0; i < history.length; i++) {
-            // Result is true count it
-            if (history[i].mask)
-            {
-                positives += 1;
-            }
-        }
-
-        double ratio = positives / total; // ratio of true detections over lastXResults
-
-        // If true detections exceed the threshold
-        if (ratio > MIN_ATTRIBUTE_THRESHOLD)
-        {
-            return true; // Mask detected
-        }
-        else
-        {
-            return false; // Mask not detected
-        }
-    }
 
     // Function to check if eye closeness was detected the last X results returns boolean for use in active session
     public boolean eyeClosenessDetectedXTimes(FacialAttributeData[] history)
     {
         Log.e("Eyecloseness detection", "In function eyeClosenessDetectedXTimes");
-        int positives = 0; // Used to get ratio of positive detections
+        int numEyesClosed = 0; // Used to get ratio of positive detections
         int total = history.length;
 
         // History should not be empty
@@ -824,15 +796,14 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             Log.e("Eyecloseness detection", "eyeOpenness = " + Boolean.toString(history[i].eyeOpenness));
             if (!history[i].eyeOpenness) // if the eyes are closed
             {
-                Log.e("Eyecloseness detection", "Counted as positive");
-                positives += 1;
+                numEyesClosed += 1;
             }
         }
 
-        double ratio = positives / total; // ratio of true detections over lastXResults
+        double ratio = numEyesClosed / total; // ratio of true detections over lastXResults
 
         // If true detections exceed the threshold
-        if (ratio > MIN_ATTRIBUTE_THRESHOLD)
+        if (ratio > MIN_EYECLOSENESS_THRESHOLD)
         {
             // Generate a warning message
             SessionTimer sTimer = new SessionTimer();
@@ -961,6 +932,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
         SessionTimer sTimer = new SessionTimer();
         boolean deviating = false;
+        boolean sendWarning = false;
         double neutralDistBetLeftEyeLeftEar = Math.abs(distBetweenPoints(neutral.leftEyeX, neutral.leftEyeY, neutral.leftEarTragionX, neutral.leftEarTragionY));
         double neutralDistBetRightEyeRightEar = Math.abs(distBetweenPoints(neutral.rightEyeX, neutral.rightEyeY, neutral.rightEarTragionX, neutral.rightEarTragionY));
         double neutralDistBetNoseMouth = Math.abs(distBetweenPoints(neutral.noseTipX, neutral.noseTipY, neutral.mouthCenterX, neutral.mouthCenterY));
@@ -990,38 +962,45 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         // Check which direction the driver is deviating
         if (deviating)
         {
+            String warningMsg;
             // Create a warning message if driver deviates with time and cause
-            String warningMsg = "\nWARNING!\n Time:";
             ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
             String timeStr = sTimer.getTimeStr(timeOfWarning);
-            warningMsg += timeStr;
-            warningMsg += " \nCause: ";
             // Turning Left
             if (results.noseTipX > (neutral.noseTipX + NOSE_DEVIATION_X_LEFT_THRESHOLD))
             {
-                warningMsg += "Driver looking Left! ";
                 Log.e("WARNING!", timeStr + ": Driver looking Left! ");
+                sendWarning = true;
 
             }
             // Turning Right
             if (results.noseTipX < (neutral.noseTipX - NOSE_DEVIATION_X_RIGHT_THRESHOLD))
             {
-                warningMsg += "Driver looking Right! ";
                 Log.e("WARNING!", timeStr + ": Driver looking Right! ");
+                sendWarning = true;
             }
             // Looking Up
             if (results.noseTipY < (neutral.noseTipY - NOSE_DEVIATION_Y_UP_THRESHOLD))
             {
-                warningMsg += "Driver looking Up! ";
                 Log.e("WARNING!", timeStr + ": Driver looking Up! ");
+                sendWarning = true;
             }
             // Looking Down
             if (results.noseTipY > (neutral.noseTipY + NOSE_DEVIATION_Y_DOWN_THRESHOLD))
             {
-                warningMsg += "Driver looking Down! ";
                 Log.e("WARNING!", timeStr + ": Driver looking Down! ");
+                sendWarning = true;
             }
-            warningList.add(warningMsg); // Append the warning to the list
+
+            if (sendWarning == true)
+            {
+                // Create a warning message if driver deviates with time and cause
+                warningMsg = "\nWARNING!\n Time:";
+                warningMsg += timeStr;
+                warningMsg += " \nCause: ";
+                warningMsg += "Driver looking Away!";
+                warningList.add(warningMsg); // Append the warning to the list
+            }
         }
         return deviating;
     }
