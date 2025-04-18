@@ -77,6 +77,8 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private int counter = 0; // Used to ensure the first 5 results are collected before starting calibration
     private static final int CALIBRATION_FRAME_COUNT = 20; //To change the max frames needed for checking neutral position
     private static final double MAX_DEVIATION_THRESHOLD = 8.0; // Used to tell if driver deviates from neutral
+    private static final double NOSE_DEVIATION_X_THRESHOLD = 95.0;
+    private static final double NOSE_DEVIATION_Y_THRESHOLD = 60.0;
     private long deviationStartTime = 0;
     private long eyeClosenessStartTime = 0;
     private long livenessStartTime = 0;
@@ -964,6 +966,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         double distBetRightEyeRightEar = Math.abs(distBetweenPoints(results.rightEyeX, results.rightEyeY, results.rightEarTragionX, results.rightEarTragionY));
         double distBetNoseMouth = Math.abs(distBetweenPoints(results.noseTipX, results.noseTipY, results.mouthCenterX, results.mouthCenterY));
 
+        Log.d("results.noseTipX", Double.toString(results.noseTipX));
+        Log.d("results.noseTipY", Double.toString(results.noseTipY));
+        Log.d("neutral.noseTipX", Double.toString(neutral.noseTipX));
+        Log.d("neutral.noseTipY", Double.toString(neutral.noseTipY));
+
         // Compare results against neutral position
         if (Math.abs(neutralDistBetLeftEyeLeftEar - distBetLeftEyeLeftEar) > MAX_DEVIATION_THRESHOLD)
         {
@@ -988,25 +995,26 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             warningMsg += timeStr;
             warningMsg += " \nCause: ";
             // Turning Left
-            if (results.noseTipX > neutral.noseTipX)
+            if (results.noseTipX > (neutral.noseTipX + NOSE_DEVIATION_X_THRESHOLD))
             {
                 warningMsg += "Driver looking Left! ";
                 Log.e("WARNING!", timeStr + ": Driver looking Left! ");
+
             }
             // Turning Right
-            if (results.noseTipX < neutral.noseTipX)
+            if (results.noseTipX < (neutral.noseTipX - NOSE_DEVIATION_X_THRESHOLD))
             {
                 warningMsg += "Driver looking Right! ";
                 Log.e("WARNING!", timeStr + ": Driver looking Right! ");
             }
             // Looking Up
-            if (results.noseTipY < neutral.noseTipY)
+            if (results.noseTipY < (neutral.noseTipY - NOSE_DEVIATION_Y_THRESHOLD))
             {
                 warningMsg += "Driver looking Up! ";
                 Log.e("WARNING!", timeStr + ": Driver looking Up! ");
             }
             // Looking Down
-            if (results.noseTipY > neutral.noseTipY)
+            if (results.noseTipY > (neutral.noseTipY + NOSE_DEVIATION_Y_THRESHOLD))
             {
                 warningMsg += "Driver looking Down! ";
                 Log.e("WARNING!", timeStr + ": Driver looking Down! ");
