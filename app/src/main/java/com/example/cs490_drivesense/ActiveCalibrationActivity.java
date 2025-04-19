@@ -131,6 +131,10 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_active_calibration);
 
+        //Start Foreground Service
+        Intent serviceIntent = new Intent(this, MyForegroundService.class);
+        ContextCompat.startForegroundService(this, serviceIntent);
+
         //*************initializing UI elements*******************
         //This is for AFTER CALIBRATION IS COMPLETED
         //Camera View
@@ -221,16 +225,23 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     // Yes button should switch to the warning activity and pass the warningList
+                    //Stop the Foreground Service when activity finishes
+                    Intent stopIntent = new Intent(ActiveCalibrationActivity.this, MyForegroundService.class);
+                    stopService(stopIntent);
+
                     // Reset the booleans for calibration
                     isCalibrationComplete = false; // Reset calibration to get next neutral pos
                     isPostCalibLayoutRdy = false; // Layout will not be ready in next session
                     isNewSession = true; // Clear waring list for next session
                     counter = 0;
                     facialAttributeDetector.setEmbedding = true; // To overwrite liveness embedding with new value
+
                     Intent intent = new Intent(ActiveCalibrationActivity.this, WarningActivity.class);
                     intent.putStringArrayListExtra("warnings", warningList);
                     startActivity(intent);
+
                     unbindCamera();
+
                     finish();
                 }
             });
@@ -239,6 +250,10 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     // No button should go back to calibrationActivity
+                    //Stop the Foreground Service when activity finishes
+                    Intent stopIntent = new Intent(ActiveCalibrationActivity.this, MyForegroundService.class);
+                    stopService(stopIntent);
+
                     // Reset the booleans for calibration
                     isCalibrationComplete = false; // Reset calibration to get next neutral pos
                     isPostCalibLayoutRdy = false; // Layout will not be ready in next session
@@ -247,6 +262,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                     facialAttributeDetector.setEmbedding = true; // To overwrite liveness embedding with new value
                     Intent intent = new Intent(ActiveCalibrationActivity.this, CalibrationActivity.class);
                     startActivity(intent);
+
                     finish();
                 }
             });
@@ -743,6 +759,10 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         cameraExecutor.shutdown();
+
+        //Stop the Foreground Service when activity finishes
+        Intent stopIntent = new Intent(this, MyForegroundService.class);
+        stopService(stopIntent);
     }
 
     // Handle camera permission request
