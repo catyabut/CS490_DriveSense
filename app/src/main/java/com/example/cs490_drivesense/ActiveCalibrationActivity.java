@@ -174,7 +174,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         topButtonLayout = findViewById(R.id.topButtonLayout);
         bottomButtonLayout = findViewById(R.id.buttonLayout);
         safetyMessage = findViewById(R.id.safetyMessage);
-        //safetyMessageCameraOn = findViewById(R.id.safetyMessageCamera);
+        safetyMessageCameraOn = findViewById(R.id.safetyMessageCamera);
 
         //Recalibrate Button Functionality
         ImageButton recalibrateButton = findViewById(R.id.recalibrateButton);
@@ -266,6 +266,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
 
             previewView.setVisibility(isCameraOn ? View.VISIBLE : View.GONE);
             messageLayout.setVisibility(isCameraOn ? View.GONE : View.VISIBLE);
+            safetyMessageCameraOn.setVisibility(isCameraOn ? View.VISIBLE : View.GONE);
         });
 
         //Export button function here
@@ -387,6 +388,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                 if (!deviating)
                                 {
                                     eyeClosenessLastXResults = eyeClosenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if eyeCloseness is above the threshold for last X results (default is 80%)
+                                    Log.d("EyeClosenessLastXResults", Boolean.toString(eyeClosenessLastXResults));
                                 }
                                 boolean livenessLastXResults = livenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if liveness is above the threshold for last X results
 
@@ -402,6 +404,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                             runOnUiThread(() -> {
                                                 if (deviationWarningText != null) {
                                                     safetyMessage.setText("Return to your \nneutral position!\n\nYour safety is our priority\n\nPlease have a safe drive!");
+                                                    safetyMessageCameraOn.setText("Return to your \nneutral position!");
                                                     relativeLayout.setBackgroundColor(Color.YELLOW); // Set background color for warning
                                                     topButtonLayout.setBackgroundColor(Color.YELLOW);
                                                     bottomButtonLayout.setBackgroundColor(Color.YELLOW);
@@ -433,6 +436,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                             runOnUiThread(() -> {
                                                 if (deviationWarningText != null) {
                                                     safetyMessage.setText("Open your \neyes!\n\nYour safety is our priority\n\nPlease have a safe drive!");
+                                                    safetyMessageCameraOn.setText("Open your \neyes!");
                                                     relativeLayout.setBackgroundColor(Color.YELLOW); // Set background color for warning
                                                     topButtonLayout.setBackgroundColor(Color.YELLOW);
                                                     bottomButtonLayout.setBackgroundColor(Color.YELLOW);
@@ -463,6 +467,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                             runOnUiThread(() -> {
                                                 if (deviationWarningText != null) {
                                                     safetyMessage.setText("Liveness \nnot detected!\n\nYour safety is our priority\n\nPlease have a safe drive!");
+                                                    safetyMessageCameraOn.setText("Liveness \nnot detected!");
                                                     relativeLayout.setBackgroundColor(Color.YELLOW); // Set background color for warning
                                                     topButtonLayout.setBackgroundColor(Color.YELLOW);
                                                     bottomButtonLayout.setBackgroundColor(Color.YELLOW);
@@ -484,6 +489,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                 else {
                                     runOnUiThread(() -> {
                                         safetyMessage.setText("Please stay in your \nneutral position\n\nYour safety is our priority\n\nPlease have a safe drive!");
+                                        safetyMessageCameraOn.setText("Please stay in your \n  neutral position");
                                         relativeLayout.setBackgroundColor(Color.GREEN); // Set background color to indicate no problems
                                         topButtonLayout.setBackgroundColor(Color.GREEN);
                                         bottomButtonLayout.setBackgroundColor(Color.GREEN);

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/rlMainDetection"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -13,7 +14,10 @@
         android:layout_width="340dp"
         android:layout_height="617dp"
         android:layout_centerHorizontal="true"
-        android:visibility="gone" /> <!-- Hidden initially -->
+        android:visibility="gone"
+        tools:visibility="visible" >
+
+    </androidx.camera.view.PreviewView> <!-- Hidden initially -->
 
     <!-- Face Bounding Box & Landmark Overlay -->
     <com.example.cs490_drivesense.FaceOverlayView
@@ -27,6 +31,19 @@
     <!-- Message Layout (Shown When Camera is Off) -->
 
     <!-- Bottom Button Container -->
+
+    <TextView
+        android:id="@+id/safetyMessageCamera"
+        android:layout_width="wrap_content"
+        android:layout_height="55dp"
+        android:layout_below="@id/topButtonLayout"
+        android:layout_centerHorizontal="true"
+        android:text="Please stay in your \n  neutral position"
+        android:textColor="@color/black"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:visibility="visible"
+        tools:visibility="visible" />
 
     <LinearLayout
         android:id="@+id/messageLayout"
