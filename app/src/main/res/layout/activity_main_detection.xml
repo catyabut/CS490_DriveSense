@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rlMainDetection"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/white">
+    android:background="@color/white"
+    android:visibility="visible">
 
     <!-- Camera Preview (Initially Hidden) -->
 
     <androidx.camera.view.PreviewView
         android:id="@+id/previewViewAC"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:visibility="gone"/> <!-- Hidden initially -->
+        android:layout_width="340dp"
+        android:layout_height="617dp"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone" /> <!-- Hidden initially -->
 
     <!-- Face Bounding Box & Landmark Overlay -->
     <com.example.cs490_drivesense.FaceOverlayView
@@ -19,7 +22,7 @@
         android:layout_height="match_parent"
         android:layout_gravity="center"
         android:background="@android:color/transparent"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
     <!-- Message Layout (Shown When Camera is Off) -->
 
@@ -45,9 +48,9 @@
         <TextView
             android:id="@+id/safetyMessage"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="170dp"
             android:gravity="center"
-            android:text="Your safety is our priority\n\nPlease have a safe drive!"
+            android:text="Please stay in your \nneutral position\n\nYour safety is our priority\n\nPlease have a safe drive!"
             android:textColor="@android:color/black"
             android:textSize="22sp"
             android:textStyle="bold" />
@@ -69,32 +72,43 @@
     <RelativeLayout
         android:id="@+id/buttonLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="115dp"
         android:layout_alignParentBottom="true"
-        android:padding="16dp"
-        android:background="@android:color/white">
+        android:background="@android:color/white"
+        android:padding="16dp">
 
         <!-- Camera Toggle Button -->
+
         <ImageButton
             android:id="@+id/cameraToggleButton"
             android:layout_width="64dp"
             android:layout_height="64dp"
             android:layout_centerHorizontal="true"
-            android:src="@drawable/ic_camera"
             android:background="@android:color/transparent"
-            android:contentDescription="Toggle Camera"/>
+            android:contentDescription="Toggle Camera"
+            android:src="@drawable/ic_camera" />
+
+        <TextView
+            android:id="@+id/textToggleCamera"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/cameraToggleButton"
+            android:layout_centerHorizontal="true"
+            android:text="                        Toggle Camera  Recalibrate"
+            android:textColor="@color/black" />
 
         <ImageButton
             android:id="@+id/recalibrateButton"
             android:layout_width="45dp"
             android:layout_height="45dp"
-            android:layout_toRightOf="@id/cameraToggleButton"
             android:layout_marginStart="32dp"
             android:layout_marginTop="9dp"
-            android:src="@drawable/ic_recalibrate"
-            android:scaleType="centerInside"
+            android:layout_toRightOf="@id/cameraToggleButton"
             android:background="@android:color/transparent"
-            android:contentDescription="Recalibrate"/>
+            android:contentDescription="Recalibrate"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_recalibrate" />
+
 
         <!-- Spacer between buttons -->
 
@@ -106,17 +120,17 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
-        android:orientation="horizontal"
+        android:background="@android:color/white"
         android:gravity="end"
-        android:padding="16dp"
-        android:background="@android:color/white">
+        android:orientation="horizontal"
+        android:padding="16dp">
 
         <Button
             android:id="@+id/DoneButton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:backgroundTint="#2196F3"
-            android:text="Done" />
+            android:text="Finish Drive" />
     </LinearLayout>
 
 </RelativeLayout>

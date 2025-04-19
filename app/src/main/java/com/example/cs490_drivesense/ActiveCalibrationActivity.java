@@ -28,6 +28,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import androidx.annotation.NonNull;
@@ -60,6 +61,10 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     //*****************Main Detection Layout**********************
     private LinearLayout messageLayout;
     private ImageButton cameraToggleButton;
+    private RelativeLayout relativeLayout;
+    private LinearLayout topButtonLayout;
+    private TextView safetyMessage;
+    private RelativeLayout bottomButtonLayout;
     private ImageButton exportButton;
     private TextView deviationWarningText;
     private boolean isCameraOn = false;
@@ -162,6 +167,10 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         messageLayout = findViewById(R.id.messageLayout);
         cameraToggleButton = findViewById(R.id.cameraToggleButton);
         deviationWarningText = findViewById(R.id.deviationWarningText);
+        relativeLayout = findViewById(R.id.rlMainDetection);
+        topButtonLayout = findViewById(R.id.topButtonLayout);
+        bottomButtonLayout = findViewById(R.id.buttonLayout);
+        safetyMessage = findViewById(R.id.safetyMessage);
 
         //Recalibrate Button Functionality
         ImageButton recalibrateButton = findViewById(R.id.recalibrateButton);
@@ -386,8 +395,13 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                         if (elapsed >= DEVIATION_THRESHOLD_MS) {
                                             runOnUiThread(() -> {
                                                 if (deviationWarningText != null) {
+                                                    safetyMessage.setText("Return to your \nneutral position!\n\nYour safety is our priority\n\nPlease have a safe drive!");
+                                                    relativeLayout.setBackgroundColor(Color.YELLOW); // Set background color for warning
+                                                    topButtonLayout.setBackgroundColor(Color.YELLOW);
+                                                    bottomButtonLayout.setBackgroundColor(Color.YELLOW);
+
                                                     deviationWarningText.setText("⚠️ Please return to neutral position!");
-                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0));
+                                                    deviationWarningText.setTextColor(Color.RED);
                                                     deviationWarningText.setVisibility(View.VISIBLE);
                                                 }
                                                 if (mediaPlayer == null) {
@@ -412,8 +426,12 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                         if (elapsed >= EYECLOSENESS_THRESHOLD_MS) {
                                             runOnUiThread(() -> {
                                                 if (deviationWarningText != null) {
+                                                    safetyMessage.setText("Open your \neyes!\n\nYour safety is our priority\n\nPlease have a safe drive!");
+                                                    relativeLayout.setBackgroundColor(Color.YELLOW); // Set background color for warning
+                                                    topButtonLayout.setBackgroundColor(Color.YELLOW);
+                                                    bottomButtonLayout.setBackgroundColor(Color.YELLOW);
                                                     deviationWarningText.setText("⚠️ Please open your eyes!");
-                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0));
+                                                    deviationWarningText.setTextColor(Color.RED);
                                                     deviationWarningText.setVisibility(View.VISIBLE);
                                                 }
                                                 if (mediaPlayer == null) {
@@ -438,8 +456,12 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                         if (elapsed >= LIVENESS_THRESHOLD_MS) {
                                             runOnUiThread(() -> {
                                                 if (deviationWarningText != null) {
+                                                    safetyMessage.setText("Liveness \nnot detected!\n\nYour safety is our priority\n\nPlease have a safe drive!");
+                                                    relativeLayout.setBackgroundColor(Color.YELLOW); // Set background color for warning
+                                                    topButtonLayout.setBackgroundColor(Color.YELLOW);
+                                                    bottomButtonLayout.setBackgroundColor(Color.YELLOW);
                                                     deviationWarningText.setText("⚠️ Liveness not detected!");
-                                                    deviationWarningText.setTextColor(Color.rgb(255, 191, 0));
+                                                    deviationWarningText.setTextColor(Color.RED); //Color.rgb(255, 191, 0) old color
                                                     deviationWarningText.setVisibility(View.VISIBLE);
                                                 }
                                                 if (mediaPlayer == null) {
@@ -455,6 +477,10 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                 // If driver passes every check reset the chime and hide warning text
                                 else {
                                     runOnUiThread(() -> {
+                                        safetyMessage.setText("Please stay in your \nneutral position\n\nYour safety is our priority\n\nPlease have a safe drive!");
+                                        relativeLayout.setBackgroundColor(Color.GREEN); // Set background color to indicate no problems
+                                        topButtonLayout.setBackgroundColor(Color.GREEN);
+                                        bottomButtonLayout.setBackgroundColor(Color.GREEN);
                                         isCurrentlyDeviating = false;
                                         isCurrentlyClosingEyes = false;
                                         isCurrentlyNotLive = false;
