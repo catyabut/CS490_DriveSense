@@ -64,6 +64,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private RelativeLayout relativeLayout;
     private LinearLayout topButtonLayout;
     private TextView safetyMessage;
+    private TextView safetyMessageCameraOn;
     private RelativeLayout bottomButtonLayout;
     private ImageButton exportButton;
     private TextView deviationWarningText;
@@ -86,12 +87,14 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private static final double NOSE_DEVIATION_X_RIGHT_THRESHOLD = 60.0;
     private static final double NOSE_DEVIATION_Y_DOWN_THRESHOLD = 65.0;
     private static final double NOSE_DEVIATION_Y_UP_THRESHOLD = 4.0;
+    private long calibrationStartTime = 0;
     private long deviationStartTime = 0;
     private long eyeClosenessStartTime = 0;
     private long livenessStartTime = 0;
     private boolean isCurrentlyDeviating = false;   // deviation from neutral used in active session
     private boolean isCurrentlyClosingEyes = false; // eyecloseness check used in active session
     private boolean isCurrentlyNotLive = false;     // liveness check used in active session
+    private static final long CALIBRATION_DELAY_MS = 8000; // Delay so calibration doesn't happen in a second
     private static final long DEVIATION_THRESHOLD_MS = 3000; //5 seconds
     private static final long EYECLOSENESS_THRESHOLD_MS = 2000; // 2 seconds
     private static final long LIVENESS_THRESHOLD_MS = 2000; // 2 seconds
@@ -171,6 +174,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         topButtonLayout = findViewById(R.id.topButtonLayout);
         bottomButtonLayout = findViewById(R.id.buttonLayout);
         safetyMessage = findViewById(R.id.safetyMessage);
+        //safetyMessageCameraOn = findViewById(R.id.safetyMessageCamera);
 
         //Recalibrate Button Functionality
         ImageButton recalibrateButton = findViewById(R.id.recalibrateButton);
@@ -275,6 +279,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         {
             warningList.clear();
             isNewSession = false;
+            calibrationStartTime = System.currentTimeMillis();
         }
 
         ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
@@ -339,8 +344,9 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                 if (faceDetectedAllResults)
                                 {
                                     boolean userStill = this.checkIfUserStill(faceDetector.lastXResults);
+                                    long elapsed = System.currentTimeMillis() - livenessStartTime;
                                     // Calibration successful set the neutral position
-                                    if (userStill && !isCalibrationComplete && !wearingSunglasses)
+                                    if (userStill && !isCalibrationComplete && !wearingSunglasses && (elapsed >= CALIBRATION_DELAY_MS))
                                     {
                                         faceDetector.setNeutralPosition(faceDetectionResults);
                                         isCalibrationComplete = true;

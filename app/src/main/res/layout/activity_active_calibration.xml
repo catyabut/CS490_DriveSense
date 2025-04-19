@@ -60,7 +60,6 @@
             android:id="@+id/livenessText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Liveness: "
             android:textColor="#FFFFFF"
             android:textSize="16sp" />
 
