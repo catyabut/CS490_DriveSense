@@ -50,4 +50,8 @@ dependencies {
     androidTestImplementation libs.ext.junit
     androidTestImplementation libs.espresso.core
 
+    //animated gifs
+    implementation libs.androidgifdrawable
+
+
 }

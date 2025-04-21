@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:gravity="center"
-    android:padding="20dp"
+    android:padding="35dp"
     android:background="@android:color/white">
+
+    <pl.droidsonroids.gif.GifImageView
+        android:id="@+id/DriveSenseLogo"
+        android:layout_width="229dp"
+        android:layout_height="194dp"
+        android:src="@drawable/drivesense_anim" />
 
     <TextView
         android:id="@+id/LoadingText"
@@ -40,7 +48,7 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="50dp"
+        android:layout_marginTop="40dp"
         android:gravity="center"
         android:text="Your Safety is our Priority"
         android:textSize="24sp"
