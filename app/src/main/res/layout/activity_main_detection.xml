@@ -110,7 +110,9 @@
             android:layout_centerHorizontal="true"
             android:background="@android:color/transparent"
             android:contentDescription="Toggle Camera"
-            android:src="@drawable/ic_camera" />
+            android:scaleType="centerInside"
+            android:adjustViewBounds="true"
+            android:src="@drawable/camera" />
 
         <TextView
             android:id="@+id/textToggleCamera"

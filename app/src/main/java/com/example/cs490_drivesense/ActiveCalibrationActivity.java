@@ -27,6 +27,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
@@ -98,7 +99,6 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private static final long DEVIATION_THRESHOLD_MS = 3000; //5 seconds
     private static final long EYECLOSENESS_THRESHOLD_MS = 2000; // 2 seconds
     private static final long LIVENESS_THRESHOLD_MS = 2000; // 2 seconds
-    private static boolean wearingMask = false; // Set during calibration, for use in active session to check the mask
     private static boolean wearingSunglasses = false; // Set during calibration, if true user should be told to take sunglasses off
     private static final double MIN_ATTRIBUTE_THRESHOLD = 0.8; // 80% of attribute detections should be true when checking last X results
     private static final double MIN_EYECLOSENESS_THRESHOLD = 0.75;
@@ -179,6 +179,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         bottomButtonLayout = findViewById(R.id.buttonLayout);
         safetyMessage = findViewById(R.id.safetyMessage);
         safetyMessageCameraOn = findViewById(R.id.safetyMessageCamera);
+        ImageView driverWheel = findViewById(R.id.driverWheel);
 
         //Recalibrate Button Functionality
         ImageButton recalibrateButton = findViewById(R.id.recalibrateButton);
@@ -279,6 +280,12 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         cameraToggleButton.setOnClickListener(view -> {
             if(!isCalibrationComplete) return; //Prevent toggling before calibration
             isCameraOn = !isCameraOn; //Toggle state
+
+            if (isCameraOn) {
+                cameraToggleButton.setImageResource(R.drawable.camera); // camera on
+            } else {
+                cameraToggleButton.setImageResource(R.drawable.camera_off); // camera off
+            }
 
             previewView.setVisibility(isCameraOn ? View.VISIBLE : View.GONE);
             messageLayout.setVisibility(isCameraOn ? View.GONE : View.VISIBLE);
@@ -465,6 +472,12 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                                     mediaPlayer.setLooping(true);
                                                     mediaPlayer.start();
                                                 }
+
+                                                //driverWheel image needs to switch to eye_closed
+                                                ImageView driverWheel = findViewById(R.id.driverWheel);
+                                                if (driverWheel != null) {
+                                                    driverWheel.setImageResource(R.drawable.eyes_closed); //change driving wheel to eye closed image
+                                                }
                                             });
                                             Log.w("WARNING", "Driver has been closing eyes more than 2 seconds!");
                                         }
@@ -522,6 +535,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                             mediaPlayer.stop();
                                             mediaPlayer.release();
                                             mediaPlayer = null;
+                                        }
+                                        //Reset image back to driver wheel
+                                        ImageView driverWheel = findViewById(R.id.driverWheel);
+                                        if (driverWheel != null) {
+                                            driverWheel.setImageResource(R.drawable.drivewheelhand); // normal safe wheel
                                         }
                                     });
                                 }
