@@ -2,6 +2,7 @@ package com.example.cs490_drivesense;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -40,6 +41,40 @@ public class CalibrationActivity extends AppCompatActivity {
 
         // Initialize camera executor for background thread
         cameraExecutor = Executors.newSingleThreadExecutor();
+    }
+
+    /*
+    To hide the notifications and bottom bar
+     */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        hideSystemUI();
+    }
+
+    private void hideSystemUI() {
+        // For Android 11+ (API 30+)
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            getWindow().setDecorFitsSystemWindows(false);
+            getWindow().getInsetsController().hide(
+                    android.view.WindowInsets.Type.statusBars() |
+                            android.view.WindowInsets.Type.navigationBars()
+            );
+            getWindow().getInsetsController().setSystemBarsBehavior(
+                    android.view.WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            );
+        } else {
+            // For Android 10 and lower
+            View decorView = getWindow().getDecorView();
+            decorView.setSystemUiVisibility(
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                            | View.SYSTEM_UI_FLAG_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                            | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+            );
+        }
     }
 
     @Override

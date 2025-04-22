@@ -34,7 +34,7 @@ public class MyForegroundService extends Service {
                 .setOngoing(true) //cannot swipe away accidentally
                 .build();
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) { // Android 14 = API 34+
+        if (Build.VERSION.SDK_INT >= 34) { // API 34 = Android 14
             startForeground(1, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_CAMERA);
         } else {
             startForeground(1, notification);
