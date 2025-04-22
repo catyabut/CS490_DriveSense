@@ -858,7 +858,15 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         cameraExecutor.shutdown();
-
+        // Close the AI models
+        this.faceDetector.close();
+        this.facialAttributeDetector.close();
+        // Stop the chime
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
         //Stop the Foreground Service when activity finishes
         Intent stopIntent = new Intent(this, MyForegroundService.class);
         stopService(stopIntent);

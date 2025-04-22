@@ -242,4 +242,8 @@ public class MediaPipeFaceDetectionTFLite {
         return this.neutralPosition;
     }
 
+    public void close() {
+        tfliteInterpreter.close();
+    }
+
 }
