@@ -41,6 +41,8 @@
         android:layout_height="96dp"
         android:layout_marginTop="20dp"
         android:background="@drawable/circle_button_blue"
+        android:backgroundTint="@null"
+        android:foreground="?attr/selectableItemBackgroundBorderless"
         android:text="PRESS"
         android:textAllCaps="true"
         android:textColor="#FFFFFF"

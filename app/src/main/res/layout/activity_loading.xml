@@ -23,6 +23,7 @@
         android:paddingBottom="30dp"
         android:text="DriveSense"
         android:textSize="50sp"
+        android:textColor="#000000"
         android:textStyle="bold" />
 
     <!-- ProgressBar with built‑in warm red tint -->
@@ -45,6 +46,7 @@
         android:gravity="center"
         android:text="0%"
         android:textSize="36sp"
+        android:textColor="#000000"
         android:textStyle="bold" />
 
     <TextView
@@ -54,6 +56,7 @@
         android:gravity="center"
         android:text="Your Safety is our Priority"
         android:textSize="24sp"
+        android:textColor="#000000"
         android:textStyle="bold" />
 
 </LinearLayout>
