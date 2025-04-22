@@ -102,6 +102,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private static boolean wearingSunglasses = false; // Set during calibration, if true user should be told to take sunglasses off
     private static final double MIN_ATTRIBUTE_THRESHOLD = 0.8; // 80% of attribute detections should be true when checking last X results
     private static final double MIN_EYECLOSENESS_THRESHOLD = 0.75;
+    //*********** Warning Variables for Warning System ***********
+    private boolean eyesClosedWarningSent = false;
+    private boolean livenessWarningSent = false;
+    private boolean deviationWarningSent = false;
+    //********* Warning Variables for Warning System END *********
 
     private MediaPlayer mediaPlayer;
     private LinearLayout resultsLayout; //Declare resultsLayout
@@ -139,8 +144,6 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         //This is for AFTER CALIBRATION IS COMPLETED
         //Camera View
         previewView = findViewById(R.id.previewView);
-        //Results layout
-        resultsLayout = findViewById(R.id.resultsLayout);
         //*********************************************************
 
         //Retrieve preloaded model from the DriveSenseApplication class
@@ -477,18 +480,32 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                                     mediaPlayer.setLooping(true);
                                                     mediaPlayer.start();
                                                 }
+                                                //Add warning to the log only once!
+                                                if (!deviationWarningSent) {
+                                                    SessionTimer sTimer = new SessionTimer();
+                                                    String warningMsg = "\nWARNING!\n Time:" + sTimer.getTimeStr(sTimer.getCurrentTime()) + " \nCause: Driver looking Away!";
+                                                    warningList.add(warningMsg);
+                                                    deviationWarningSent = true;
+                                                }
+
+                                                //driverWheel image needs to switch to looking_away
+                                                ImageView driverWheel = findViewById(R.id.driverWheel);
+                                                if (driverWheel != null) {
+                                                    driverWheel.setImageResource(R.drawable.looking_away); //change driving wheel to eye closed image
+                                                }
                                             });
                                             Log.w("WARNING", "Driver has been looking away for more than 5 seconds!");
                                         }
                                     }
                                 }
-//                                // Then check eyeCloseness
+                                // Then check eyeCloseness
                                 else if (eyeClosenessLastXResults)
                                 {
                                     Log.d("DetectionLoop", "In eyecloseness if statement.");
                                     if (!isCurrentlyClosingEyes) {
                                         eyeClosenessStartTime = System.currentTimeMillis();
                                         isCurrentlyClosingEyes = true;
+                                        eyesClosedWarningSent = false; //Resetting sent flag when a new event happens
                                     } else {
                                         long elapsed = System.currentTimeMillis() - eyeClosenessStartTime;
                                         if (elapsed >= EYECLOSENESS_THRESHOLD_MS) {
@@ -507,6 +524,14 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                                     mediaPlayer = MediaPlayer.create(this, R.raw.warning_sound);
                                                     mediaPlayer.setLooping(true);
                                                     mediaPlayer.start();
+                                                }
+
+                                                //if a warning hasnt been sent yet, send a warning
+                                                if (!eyesClosedWarningSent) {
+                                                    SessionTimer sTimer = new SessionTimer();
+                                                    String warningMsg = "\nWARNING!\n Time:" + sTimer.getTimeStr(sTimer.getCurrentTime()) + " \nCause: Eyes are closed!";
+                                                    warningList.add(warningMsg);
+                                                    eyesClosedWarningSent = true; // Mark as sent
                                                 }
 
                                                 //driverWheel image needs to switch to eye_closed
@@ -545,6 +570,20 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                                     mediaPlayer.setLooping(true);
                                                     mediaPlayer.start();
                                                 }
+
+                                                //if a warning hasnt been sent yet, send a warning
+                                                if (!livenessWarningSent) {
+                                                    SessionTimer sTimer = new SessionTimer();
+                                                    String warningMsg = "\nWARNING!\n Time:" + sTimer.getTimeStr(sTimer.getCurrentTime()) + " \nCause: No Liveness Detected!";
+                                                    warningList.add(warningMsg);
+                                                    livenessWarningSent = true; // Mark as sent
+                                                }
+
+                                                //driverWheel image needs to switch to no_liveness
+                                                ImageView driverWheel = findViewById(R.id.driverWheel);
+                                                if (driverWheel != null) {
+                                                    driverWheel.setImageResource(R.drawable.no_liveness); //change driving wheel to eye closed image
+                                                }
                                             });
                                             Log.w("WARNING", "Driver does not have liveness for more than 2 seconds!");
                                         }
@@ -563,6 +602,11 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                         isCurrentlyNotLive = false;
                                         deviationStartTime = 0;
 
+                                        //Reset the warning sent flags to false!
+                                        eyesClosedWarningSent = false;
+                                        deviationWarningSent = false;
+                                        livenessWarningSent = false;
+
                                         if (deviationWarningText != null) {
                                             deviationWarningText.setVisibility(View.GONE);
                                         }
@@ -572,6 +616,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                             mediaPlayer.release();
                                             mediaPlayer = null;
                                         }
+
                                         //Reset image back to driver wheel
                                         ImageView driverWheel = findViewById(R.id.driverWheel);
                                         if (driverWheel != null) {
@@ -917,15 +962,6 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         // If true detections exceed the threshold
         if (ratio > MIN_EYECLOSENESS_THRESHOLD)
         {
-            // Generate a warning message
-            SessionTimer sTimer = new SessionTimer();
-            Log.e("Eyecloseness detection", "Return true ratio greater than .80");
-            String warningMsg = "\nWARNING!\n Time:";
-            ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
-            String timeStr = sTimer.getTimeStr(timeOfWarning);
-            warningMsg += timeStr;
-            warningMsg += " \nCause: Eyes are closed!";
-            warningList.add(warningMsg);
             return true; // Eyecloseness detected
         }
         else
@@ -1042,9 +1078,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             return false;
         }
 
-        SessionTimer sTimer = new SessionTimer();
         boolean deviating = false;
-        boolean sendWarning = false;
         double neutralDistBetLeftEyeLeftEar = Math.abs(distBetweenPoints(neutral.leftEyeX, neutral.leftEyeY, neutral.leftEarTragionX, neutral.leftEarTragionY));
         double neutralDistBetRightEyeRightEar = Math.abs(distBetweenPoints(neutral.rightEyeX, neutral.rightEyeY, neutral.rightEarTragionX, neutral.rightEarTragionY));
         double neutralDistBetNoseMouth = Math.abs(distBetweenPoints(neutral.noseTipX, neutral.noseTipY, neutral.mouthCenterX, neutral.mouthCenterY));
@@ -1052,10 +1086,10 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         double distBetRightEyeRightEar = Math.abs(distBetweenPoints(results.rightEyeX, results.rightEyeY, results.rightEarTragionX, results.rightEarTragionY));
         double distBetNoseMouth = Math.abs(distBetweenPoints(results.noseTipX, results.noseTipY, results.mouthCenterX, results.mouthCenterY));
 
-        Log.d("results.noseTipX", Double.toString(results.noseTipX));
-        Log.d("results.noseTipY", Double.toString(results.noseTipY));
-        Log.d("neutral.noseTipX", Double.toString(neutral.noseTipX));
-        Log.d("neutral.noseTipY", Double.toString(neutral.noseTipY));
+//        Log.d("results.noseTipX", Double.toString(results.noseTipX));
+//        Log.d("results.noseTipY", Double.toString(results.noseTipY));
+//        Log.d("neutral.noseTipX", Double.toString(neutral.noseTipX));
+//        Log.d("neutral.noseTipY", Double.toString(neutral.noseTipY));
 
         // Compare results against neutral position
         if (Math.abs(neutralDistBetLeftEyeLeftEar - distBetLeftEyeLeftEar) > MAX_DEVIATION_THRESHOLD)
@@ -1071,49 +1105,6 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
             deviating = true;
         }
 
-        // Check which direction the driver is deviating
-        if (deviating)
-        {
-            String warningMsg;
-            // Create a warning message if driver deviates with time and cause
-            ZonedDateTime timeOfWarning = sTimer.getCurrentTime();
-            String timeStr = sTimer.getTimeStr(timeOfWarning);
-            // Turning Left
-            if (results.noseTipX > (neutral.noseTipX + NOSE_DEVIATION_X_LEFT_THRESHOLD))
-            {
-                Log.e("WARNING!", timeStr + ": Driver looking Left! ");
-                sendWarning = true;
-
-            }
-            // Turning Right
-            if (results.noseTipX < (neutral.noseTipX - NOSE_DEVIATION_X_RIGHT_THRESHOLD))
-            {
-                Log.e("WARNING!", timeStr + ": Driver looking Right! ");
-                sendWarning = true;
-            }
-            // Looking Up
-            if (results.noseTipY < (neutral.noseTipY - NOSE_DEVIATION_Y_UP_THRESHOLD))
-            {
-                Log.e("WARNING!", timeStr + ": Driver looking Up! ");
-                sendWarning = true;
-            }
-            // Looking Down
-            if (results.noseTipY > (neutral.noseTipY + NOSE_DEVIATION_Y_DOWN_THRESHOLD))
-            {
-                Log.e("WARNING!", timeStr + ": Driver looking Down! ");
-                sendWarning = true;
-            }
-
-            if (sendWarning == true)
-            {
-                // Create a warning message if driver deviates with time and cause
-                warningMsg = "\nWARNING!\n Time:";
-                warningMsg += timeStr;
-                warningMsg += " \nCause: ";
-                warningMsg += "Driver looking Away!";
-                warningList.add(warningMsg); // Append the warning to the list
-            }
-        }
         return deviating;
     }
 
