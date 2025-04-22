@@ -91,17 +91,20 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private long calibrationStartTime = 0;
     private long deviationStartTime = 0;
     private long eyeClosenessStartTime = 0;
+    private long eyeOpennessStartTime = 0; //For Liveness
     private long livenessStartTime = 0;
     private boolean isCurrentlyDeviating = false;   // deviation from neutral used in active session
     private boolean isCurrentlyClosingEyes = false; // eyecloseness check used in active session
+    private boolean isCurrentlyEyesOpen = false; // eyeopenness check used in active session
     private boolean isCurrentlyNotLive = false;     // liveness check used in active session
     private static final long CALIBRATION_DELAY_MS = 8000; // Delay so calibration doesn't happen in a second
     private static final long DEVIATION_THRESHOLD_MS = 3000; //5 seconds
-    private static final long EYECLOSENESS_THRESHOLD_MS = 1000; // 1 seconds
+    private static final long EYECLOSENESS_THRESHOLD_MS = 1500; // 1.5 seconds
     private static final long LIVENESS_THRESHOLD_MS = 2000; // 2 seconds
     private static boolean wearingSunglasses = false; // Set during calibration, if true user should be told to take sunglasses off
     private static final double MIN_ATTRIBUTE_THRESHOLD = 0.8; // 80% of attribute detections should be true when checking last X results
     private static final double MIN_EYECLOSENESS_THRESHOLD = 0.75;
+    private static final long EYEOPENNESS_TOO_LONG_THRESHOLD_MS = 10000; // 10 seconds for eye OPENNESS for liveness
     //*********** Warning Variables for Warning System ***********
     private boolean eyesClosedWarningSent = false;
     private boolean livenessWarningSent = false;
@@ -447,6 +450,31 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                 boolean eyeClosenessLastXResults = false; // Only check eyes when user is not deviating
 
                                 boolean deviating = isDeviatingFromNeutral(faceDetectionResults, neutral); // check if driver deviates from neutral
+
+                                // If eye openness is consistently open
+                                if (!eyeClosenessLastXResults) { // means eyes are mostly open
+                                    if (!isCurrentlyEyesOpen) {
+                                        eyeOpennessStartTime = System.currentTimeMillis();
+                                        isCurrentlyEyesOpen = true;
+                                    } else {
+                                        long elapsedEyeOpen = System.currentTimeMillis() - eyeOpennessStartTime;
+                                        if (elapsedEyeOpen >= EYEOPENNESS_TOO_LONG_THRESHOLD_MS) {
+                                            // Force liveness = false because eyes open too long
+                                            Log.w("LivenessOverride", "Eyes open for too long, forcing liveness = false!");
+                                            if (facialAttributeDetector != null) {
+                                                facialAttributeDetector.forceLivenessFalse();
+                                            }
+
+                                            //After forcing liveness false, reset the timer immediately to avoid repeat warning
+                                            eyeOpennessStartTime = System.currentTimeMillis();
+                                        }
+                                    }
+                                } else {
+                                    // RESET everything because they blinked
+                                    isCurrentlyEyesOpen = false; // reset if they blink
+                                    eyeOpennessStartTime = System.currentTimeMillis();
+                                }
+
                                 if (!deviating)
                                 {
                                     eyeClosenessLastXResults = eyeClosenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if eyeCloseness is above the threshold for last X results (default is 80%)
@@ -972,7 +1000,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         }
         else
         {
-            Log.e("Eyecloseness detection", "Return false ratio less than .80");
+            Log.e("Eyecloseness detection", "Return false ratio less than .50");
             return false; // Eyecloseness not detected
         }
     }
