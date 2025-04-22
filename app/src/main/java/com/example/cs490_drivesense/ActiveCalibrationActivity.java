@@ -97,7 +97,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     private boolean isCurrentlyNotLive = false;     // liveness check used in active session
     private static final long CALIBRATION_DELAY_MS = 8000; // Delay so calibration doesn't happen in a second
     private static final long DEVIATION_THRESHOLD_MS = 3000; //5 seconds
-    private static final long EYECLOSENESS_THRESHOLD_MS = 2000; // 2 seconds
+    private static final long EYECLOSENESS_THRESHOLD_MS = 1000; // 1 seconds
     private static final long LIVENESS_THRESHOLD_MS = 2000; // 2 seconds
     private static boolean wearingSunglasses = false; // Set during calibration, if true user should be told to take sunglasses off
     private static final double MIN_ATTRIBUTE_THRESHOLD = 0.8; // 80% of attribute detections should be true when checking last X results
