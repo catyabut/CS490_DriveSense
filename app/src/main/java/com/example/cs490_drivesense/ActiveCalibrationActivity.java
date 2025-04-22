@@ -452,28 +452,28 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                 boolean deviating = isDeviatingFromNeutral(faceDetectionResults, neutral); // check if driver deviates from neutral
 
                                 // If eye openness is consistently open
-                                if (!eyeClosenessLastXResults) { // means eyes are mostly open
-                                    if (!isCurrentlyEyesOpen) {
-                                        eyeOpennessStartTime = System.currentTimeMillis();
-                                        isCurrentlyEyesOpen = true;
-                                    } else {
-                                        long elapsedEyeOpen = System.currentTimeMillis() - eyeOpennessStartTime;
-                                        if (elapsedEyeOpen >= EYEOPENNESS_TOO_LONG_THRESHOLD_MS) {
-                                            // Force liveness = false because eyes open too long
-                                            Log.w("LivenessOverride", "Eyes open for too long, forcing liveness = false!");
-                                            if (facialAttributeDetector != null) {
-                                                facialAttributeDetector.forceLivenessFalse();
-                                            }
-
-                                            //After forcing liveness false, reset the timer immediately to avoid repeat warning
-                                            eyeOpennessStartTime = System.currentTimeMillis();
-                                        }
-                                    }
-                                } else {
-                                    // RESET everything because they blinked
-                                    isCurrentlyEyesOpen = false; // reset if they blink
-                                    eyeOpennessStartTime = System.currentTimeMillis();
-                                }
+//                                if (!eyeClosenessLastXResults) { // means eyes are mostly open
+//                                    if (!isCurrentlyEyesOpen) {
+//                                        eyeOpennessStartTime = System.currentTimeMillis();
+//                                        isCurrentlyEyesOpen = true;
+//                                    } else {
+//                                        long elapsedEyeOpen = System.currentTimeMillis() - eyeOpennessStartTime;
+//                                        if (elapsedEyeOpen >= EYEOPENNESS_TOO_LONG_THRESHOLD_MS) {
+//                                            // Force liveness = false because eyes open too long
+//                                            Log.w("LivenessOverride", "Eyes open for too long, forcing liveness = false!");
+//                                            if (facialAttributeDetector != null) {
+//                                                facialAttributeDetector.forceLivenessFalse();
+//                                            }
+//
+//                                            //After forcing liveness false, reset the timer immediately to avoid repeat warning
+//                                            //eyeOpennessStartTime = System.currentTimeMillis();
+//                                        }
+//                                    }
+//                                } else {
+//                                    // RESET everything because they blinked
+//                                    isCurrentlyEyesOpen = false; // reset if they blink
+//                                    eyeOpennessStartTime = System.currentTimeMillis();
+//                                }
 
                                 if (!deviating)
                                 {
