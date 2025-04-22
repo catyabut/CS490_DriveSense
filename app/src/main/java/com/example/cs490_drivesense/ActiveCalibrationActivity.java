@@ -453,6 +453,7 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
                                     Log.d("EyeClosenessLastXResults", Boolean.toString(eyeClosenessLastXResults));
                                 }
                                 boolean livenessLastXResults = livenessDetectedXTimes(facialAttributeDetector.lastXResults); // check if liveness is above the threshold for last X results
+                                Log.d("Liveness detection boolean = ", Boolean.toString(livenessLastXResults));
 
                                 // First check is deviation from neutral
                                 if (deviating) {
@@ -858,9 +859,6 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         cameraExecutor.shutdown();
-        // Close the AI models
-        this.faceDetector.close();
-        this.facialAttributeDetector.close();
         // Stop the chime
         if (mediaPlayer != null) {
             mediaPlayer.stop();
@@ -1094,10 +1092,10 @@ public class ActiveCalibrationActivity extends AppCompatActivity {
         double distBetRightEyeRightEar = Math.abs(distBetweenPoints(results.rightEyeX, results.rightEyeY, results.rightEarTragionX, results.rightEarTragionY));
         double distBetNoseMouth = Math.abs(distBetweenPoints(results.noseTipX, results.noseTipY, results.mouthCenterX, results.mouthCenterY));
 
-//        Log.d("results.noseTipX", Double.toString(results.noseTipX));
-//        Log.d("results.noseTipY", Double.toString(results.noseTipY));
-//        Log.d("neutral.noseTipX", Double.toString(neutral.noseTipX));
-//        Log.d("neutral.noseTipY", Double.toString(neutral.noseTipY));
+        Log.d("results.noseTipX", Double.toString(results.noseTipX));
+        Log.d("results.noseTipY", Double.toString(results.noseTipY));
+        Log.d("neutral.noseTipX", Double.toString(neutral.noseTipX));
+        Log.d("neutral.noseTipY", Double.toString(neutral.noseTipY));
 
         // Compare results against neutral position
         if (Math.abs(neutralDistBetLeftEyeLeftEar - distBetLeftEyeLeftEar) > MAX_DEVIATION_THRESHOLD)
